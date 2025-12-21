@@ -36,7 +36,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDKs (Versioni Compatibili) -->
+    <!-- Firebase SDKs (Compat version per facilità d'uso via CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -44,7 +44,7 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-        // --- COMPONENTE ICONE (SVG integrati per stabilità totale) ---
+        // --- COMPONENTE ICONE (SVG integrati per stabilità totale e zero errori di caricamento) ---
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 Plus: <path d="M12 5v14M5 12h14"/>,
@@ -58,7 +58,8 @@
                 Send: <><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></>,
                 UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="16" x2="22" y1="11" y2="11"/></>,
                 Bike: <><circle cx="18.5" cy="17.5" r="2.5"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></>,
-                Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>
+                Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+                Edit2: <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
             };
             return (
                 <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -75,6 +76,7 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Sanitizzazione ID per Firestore
         const rawId = typeof __app_id !== 'undefined' ? __app_id : 'garage_snoopy_v1';
         const appId = rawId.split('/').join('_').replace(/[^a-zA-Z0-9_-]/g, '');
 
@@ -100,7 +102,7 @@
 
             return (
                 <header className="bg-slate-900 text-white p-5 flex justify-between items-center shadow-lg shrink-0 relative">
-                    <div className="flex items-center gap-3 z-10">
+                    <div className="flex items-center gap-3 z-10 text-left">
                         {view !== 'garage' && view !== 'login' && (
                             <button onClick={onBack} className="p-2 bg-slate-800 rounded-xl btn-active">
                                 <Icon name="ChevronLeft" size={24} className="text-orange-500" />
@@ -118,7 +120,7 @@
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-2 z-10">
+                    <div className="flex items-center gap-2 z-10 text-left">
                         {session?.role === 'admin' && (
                             <button onClick={() => setView('admin')} className={`p-2 rounded-xl ${view === 'admin' ? 'bg-blue-600' : 'bg-slate-800'}`}>
                                 <Icon name="Shield" size={20} />
@@ -136,14 +138,14 @@
                 <nav className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-8 md:p-4 max-w-md mx-auto rounded-t-[2.5rem] shadow-[0_-8px_40px_rgba(0,0,0,0.12)] z-40">
                     <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-orange-500 scale-110' : 'text-slate-400'}`}>
                         <Icon name="Gauge" size={24} />
-                        <span className="text-[10px] font-black uppercase">Stato</span>
+                        <span className="text-[10px] font-black uppercase tracking-tighter">Stato</span>
                     </button>
                     <button onClick={() => setView('history')} className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-orange-500 scale-110' : 'text-slate-400'}`}>
                         <Icon name="History" size={24} />
-                        <span className="text-[10px] font-black uppercase">Storico</span>
+                        <span className="text-[10px] font-black uppercase tracking-tighter">Storico</span>
                     </button>
                     <div className="relative -top-12">
-                        <button onClick={() => setView('addLog')} className="bg-orange-500 text-white p-5 rounded-full shadow-xl shadow-orange-500/20 border-4 border-white btn-active transition-all">
+                        <button onClick={() => setView('addLog')} className="bg-orange-500 text-white p-5 rounded-full shadow-xl shadow-orange-500/20 border-4 border-white btn-active transition-all hover:rotate-90">
                             <Icon name="Plus" size={32} />
                         </button>
                     </div>
@@ -152,7 +154,7 @@
             );
         };
 
-        // --- APP ---
+        // --- APP LOGIC ---
 
         function App() {
             const [currentUser, setCurrentUser] = useState(null);
@@ -179,23 +181,25 @@
                 setSession(null); setSelectedBikeId(null); setActiveBike(null); setView('login');
             }, []);
 
+            // 1. Auth Init
             useEffect(() => {
-                const init = async () => {
+                const initAuth = async () => {
                     try {
-                        const t = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (t) await auth.signInWithCustomToken(t);
+                        const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                        if (token) await auth.signInWithCustomToken(token);
                         else await auth.signInAnonymously();
-                    } catch (e) { console.error(e); }
+                    } catch (e) { console.error("Firebase auth error", e); }
                 };
-                init();
+                initAuth();
                 return auth.onAuthStateChanged(u => { setCurrentUser(u); setLoading(false); });
             }, []);
 
+            // 2. Listener Database (Solo dopo Auth)
             useEffect(() => {
                 if (!currentUser) return;
                 const b = `artifacts/${appId}/public/data`;
-                const unsubS = db.doc(`${b}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
-                const unsubB = db.collection(`${b}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
+                const unsubS = db.doc(`${b}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()), (e) => console.log("Waiting config..."));
+                const unsubB = db.collection(`${b}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))), (e) => console.log("Waiting bikes..."));
                 const unsubU = db.collection(`${b}/users`).onSnapshot(s => {
                     const l = s.docs.map(d => ({ ...d.data(), id: d.id }));
                     setAllUsers(l);
@@ -203,10 +207,11 @@
                         const curr = l.find(u => String(u.email) === String(session.email));
                         if (curr) setSession(p => ({ ...p, ...curr }));
                     }
-                });
+                }, (e) => console.log("Waiting users..."));
                 return () => { unsubS(); unsubB(); unsubU(); };
             }, [currentUser, session?.email]);
 
+            // 3. Dettaglio Mezzo
             useEffect(() => {
                 if (!currentUser || !selectedBikeId) return;
                 const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
@@ -217,6 +222,7 @@
 
             const handleLogin = async (e) => {
                 e.preventDefault();
+                setLoginError('');
                 if (loginForm.email === ADMIN_EMAIL && loginForm.password === ADMIN_PASS) {
                     setSession({ email: ADMIN_EMAIL, role: 'admin' });
                     setView('garage');
@@ -226,7 +232,7 @@
                     const s = await db.collection(`artifacts/${appId}/public/data/users`).get();
                     const f = s.docs.find(d => d.data().email === loginForm.email && d.data().password === loginForm.password);
                     if (f) { setSession({ ...f.data(), id: f.id }); setView('garage'); }
-                    else setLoginError('Accesso negato');
+                    else setLoginError('Accesso negato: credenziali errate');
                 } catch { setLoginError('Errore database'); }
             };
 
@@ -248,7 +254,7 @@
 
             const visibleBikes = useMemo(() => session?.role === 'admin' ? bikes : bikes.filter(b => String(b.userEmail) === String(session?.email)), [bikes, session]);
 
-            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse">Caricamento...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse">Garage Loading...</div>;
 
             return (
                 <div className="min-h-screen bg-slate-100 text-slate-900 font-sans hide-scrollbar">
@@ -256,33 +262,38 @@
                         
                         <Header view={view} setView={setView} onBack={() => setView('garage')} onLogout={handleLogout} appSettings={appSettings} session={session} />
 
-                        <main className="flex-1 overflow-y-auto p-5 pb-10 hide-scrollbar">
+                        <main className="flex-1 overflow-y-auto p-5 pb-10 hide-scrollbar text-left">
                             {view === 'login' && (
                                 <div className="py-10 space-y-8 animate-in text-center">
                                     <div className="space-y-4">
                                         <div className="mx-auto w-fit"><AppLogo size={130} url={appSettings.logoURL} /></div>
-                                        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Garage Fleet</h2>
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Snoopy Maintenance</p>
+                                        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Garage Fleet</h2>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Smart Snoopy Maintenance</p>
                                     </div>
                                     <form onSubmit={handleLogin} className="space-y-4 text-left">
                                         <input required type="email" placeholder="Email" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
                                         <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
-                                        {loginError && <p className="text-red-500 text-xs font-black text-center">{loginError}</p>}
+                                        {loginError && <p className="text-red-500 text-xs font-black text-center uppercase bg-red-50 p-4 rounded-2xl">{loginError}</p>}
                                         <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl hover:bg-black transition-colors btn-active">Accedi</button>
                                     </form>
                                 </div>
                             )}
 
                             {view === 'garage' && (
-                                <div className="space-y-6 animate-in">
-                                    <div className="flex justify-between items-end">
-                                        <div><h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">{session?.role === 'admin' ? 'Pannello Flotta' : 'I tuoi mezzi'}</p></div>
+                                <div className="space-y-6 animate-in text-left">
+                                    <div className="flex justify-between items-end text-left">
+                                        <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">{session?.role === 'admin' ? 'Gestione Flotta' : 'I tuoi mezzi'}</p></div>
                                         <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active"><Icon name="Plus" size={24}/></button>
                                     </div>
-                                    <div className="grid gap-4">
-                                        {visibleBikes.map(b => (
-                                            <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group">
-                                                <div><h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3><p className="text-slate-400 font-bold text-xs">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>{session?.role === 'admin' && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest">{String(b.userEmail)}</p>}</div>
+                                    <div className="grid gap-4 text-left">
+                                        {visibleBikes.length === 0 ? (
+                                            <div className="py-20 text-center text-slate-300 italic flex flex-col items-center gap-4">
+                                                <Icon name="Bike" size={60} className="opacity-10" />
+                                                <p>Nessun veicolo presente.</p>
+                                            </div>
+                                        ) : visibleBikes.map(b => (
+                                            <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group text-left">
+                                                <div className="text-left"><h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3><p className="text-slate-400 font-bold text-xs uppercase">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>{session?.role === 'admin' && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block">{String(b.userEmail)}</p>}</div>
                                                 <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors" />
                                             </div>
                                         ))}
@@ -291,31 +302,31 @@
                             )}
 
                             {view === 'dashboard' && activeBike && (
-                                <div className="space-y-6 animate-in">
-                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden">
-                                        <div className="relative z-10 text-left"><h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2><p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40">KM</span></p></div>
+                                <div className="space-y-6 animate-in text-left">
+                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left">
+                                        <div className="relative z-10 text-left"><h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2><p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p></div>
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
                                     {(() => {
                                         const oV = Number(activeBike.odometer) || 0; const lV = Number(activeBike.lastServiceKm) || 0; const iV = Number(activeBike.serviceIntervalKm) || 12000; const dV = oV - lV; const iD = dV >= (iV - 1000);
                                         return (
-                                            <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'}`}>
-                                                <div className="flex justify-between items-center mb-5"><div className="flex items-center gap-2"><Icon name="Gauge" className={iD ? 'text-red-500' : 'text-orange-500'} size={24} /><span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Tagliando</span></div>
-                                                <button onClick={sendEmail} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 btn-active"><Icon name="Bell" size={14} className="text-orange-500"/> {updateStatus || 'Invia Sollecito'}</button></div>
+                                            <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'} text-left`}>
+                                                <div className="flex justify-between items-center mb-5 text-left"><div className="flex items-center gap-2"><Icon name="Gauge" className={iD ? 'text-red-500' : 'text-orange-500'} size={24} /><span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Manutenzione</span></div>
+                                                <button onClick={sendEmail} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 btn-active"><Icon name="Bell" size={14} className="text-orange-500"/> {updateStatus || 'Sollecita'}</button></div>
                                                 <div className="space-y-2 text-left"><div className="flex justify-between font-black text-xs uppercase italic"><span>{dV.toLocaleString()} km fatti</span><span>Limite {iV.toLocaleString()}</span></div><div className="h-3 bg-slate-200 rounded-full overflow-hidden border border-slate-300"><div className={`h-full transition-all duration-1000 ${iD ? 'bg-red-500' : 'bg-orange-50'}`} style={{ width: `${Math.min(100, (dV/iV)*100)}%` }} /></div></div>
                                             </div>
                                         );
                                     })()}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active"><Icon name="History" className="text-slate-400" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Registro</span></button>
-                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active"><Icon name="Plus" className="text-orange-500" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Intervento</span></button>
+                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left"><Icon name="History" className="text-slate-400" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Registro</span></button>
+                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left"><Icon name="Plus" className="text-orange-500" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Intervento</span></button>
                                     </div>
                                 </div>
                             )}
 
                             {view === 'addBike' && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left">Nuovo Veicolo</h2>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Nuovo Veicolo</h2>
                                     <form onSubmit={async (e) => {
                                         e.preventDefault();
                                         const lastDate = new Date(newBike.lastServiceDate);
@@ -323,38 +334,39 @@
                                         await db.collection(`artifacts/${appId}/public/data/bikes`).add({ ...newBike, userId: currentUser.uid, userEmail: String(session?.email || ""), odometer: Number(newBike.odometer) || 0, lastServiceKm: Number(newBike.lastServiceKm) || 0, serviceIntervalKm: Number(newBike.serviceIntervalKm) || 12000, nextServiceDeadlineDate: nextDate, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                                         setNewBike({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000' });
                                         setView('garage');
-                                    }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100">
-                                        <input required className="w-full p-4 rounded-2xl font-bold" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Modello (Es. BMW GS 1250)" />
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} placeholder="Km" />
-                                            <input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} />
+                                    }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100 text-left">
+                                        <input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Modello (Es. BMW GS 1250)" />
+                                        <div className="grid grid-cols-2 gap-3 text-left">
+                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white text-slate-900" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} placeholder="Km" />
+                                            <input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} />
                                         </div>
-                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva</button>
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva nel Garage</button>
                                     </form>
                                 </div>
                             )}
 
                             {view === 'admin' && session?.role === 'admin' && (
                                 <div className="space-y-8 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter">Admin</h2>
-                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl">
-                                        <h3 className="font-black uppercase text-xs text-orange-500">Nuovo Cliente</h3>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
+                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left">
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2"><Icon name="UserPlus" size={18}/> Nuovo Cliente</h3>
                                         <input placeholder="Email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
                                         <input placeholder="Password" type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
                                         <div className="grid grid-cols-2 gap-2 text-left">
-                                            <input placeholder="Template ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
-                                            <input placeholder="Template ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
+                                            <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
+                                            <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
                                         </div>
                                         <button onClick={async () => { 
                                             await db.collection(`artifacts/${appId}/public/data/users`).add({ ...newUser, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
                                             setNewUser({email:'', password:'', role:'user', templateStandardId:'', templateUrgentId:''}); 
-                                        }} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">Crea Account</button>
+                                            alert("Profilo creato!");
+                                        }} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">Registra Utente</button>
                                     </div>
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 text-left">
                                         {allUsers.map(u => (
-                                            <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm">
-                                                <div className="flex flex-col gap-1"><p className="font-black text-sm text-slate-800">{String(u.email)}</p><p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest">{u.role}</p></div>
-                                                <button onClick={() => { if(confirm('Eliminare?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={20}/></button>
+                                            <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm text-left">
+                                                <div className="flex flex-col gap-1 text-left"><p className="font-black text-sm text-slate-800">{String(u.email)}</p><p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest">{u.role} • Template: {u.templateStandardId || 'Std'}</p></div>
+                                                <button onClick={() => { if(confirm('Eliminare definitivamente?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={20}/></button>
                                             </div>
                                         ))}
                                     </div>
@@ -363,12 +375,12 @@
 
                             {view === 'history' && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter">Cronologia</h2>
-                                    <div className="space-y-4">
-                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic">Nessun log.</div> : logs.map(l => (
-                                            <div key={l.id} className="bg-slate-50 p-6 rounded-[2rem] border-2 border-white shadow-sm flex justify-between items-start">
-                                                <div><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div>
-                                                <div className="text-right"><p className="font-black text-slate-900">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic">€{l.cost}</p></div>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Cronologia</h2>
+                                    <div className="space-y-4 text-left">
+                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic">Nessun log trovato.</div> : logs.map(l => (
+                                            <div key={l.id} className="bg-slate-50 p-6 rounded-[2rem] border-2 border-white shadow-sm flex justify-between items-start text-left">
+                                                <div className="text-left"><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div>
+                                                <div className="text-right text-left"><p className="font-black text-slate-900">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic">€{l.cost}</p></div>
                                             </div>
                                         ))}
                                     </div>
@@ -377,7 +389,7 @@
 
                             {view === 'addLog' && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left">Nuovo Lavoro</h2>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Registra Lavoro</h2>
                                     <form onSubmit={async (e) => {
                                         e.preventDefault();
                                         const kv = Number(newLog.km) || 0;
@@ -386,14 +398,14 @@
                                         if (kv > (Number(activeBike?.odometer) || 0)) await db.doc(path).update({ odometer: kv });
                                         setView('dashboard');
                                         setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
-                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl">
-                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione" />
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none font-bold" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" />
-                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none font-bold" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" />
+                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left">
+                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione (Es. Cambio Olio)" />
+                                        <div className="grid grid-cols-2 gap-3 text-left">
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" />
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" />
                                         </div>
-                                        <input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none font-bold" value={newLog.date} onChange={e => setNewLog({...newLog, date: e.target.value})} />
-                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Registra</button>
+                                        <input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.date} onChange={e => setNewLog({...newLog, date: e.target.value})} />
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active transition-all">Registra</button>
                                     </form>
                                 </div>
                             )}
