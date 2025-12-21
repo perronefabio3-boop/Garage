@@ -69,7 +69,19 @@
         };
 
         // --- CONFIGURAZIONE FIREBASE ---
-        const firebaseConfig = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
+                        </main>
+                        
+                        <BottomNav view={view} setView={setView} activeBike={activeBike} />
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
         const finalConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
 
         if (!firebase.apps.length) firebase.initializeApp(finalConfig);
