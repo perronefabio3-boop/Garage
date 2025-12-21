@@ -11,7 +11,7 @@
         .btn { background: #12192c; color: white; padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-size: 18px; width: 100%; margin-top: 10px; text-transform: uppercase; }
         .hidden { display: none; }
         .vehicle-card { background: #eee; margin: 10px 0; padding: 15px; border-radius: 10px; text-align: left; position: relative; }
-        .delete-btn { position: absolute; right: 10px; top: 10px; color: red; cursor: pointer; font-weight: bold; }
+        .delete-btn { position: absolute; right: 10px; top: 10px; color: red; cursor: pointer; font-weight: bold; padding: 5px; }
         input { width: calc(100% - 20px); padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
@@ -19,9 +19,7 @@
 
     <div id="welcome-screen" class="container">
         <h1>Garage</h1>
-        <div style="margin: 40px 0;">
-            <h2 style="font-size: 40px;">BENVENUTO</h2>
-        </div>
+        <div style="margin: 40px 0;"><h2 style="font-size: 40px;">BENVENUTO</h2></div>
         <button id="login-btn" class="btn">Entra nel Garage</button>
     </div>
 
@@ -33,41 +31,36 @@
 
     <div id="add-form" class="container hidden" style="margin-top: 20px;">
         <h3>Nuovo Veicolo</h3>
-        <input type="text" id="v-name" placeholder="Nome (es. Ducati Monster)">
-        <input type="number" id="v-km" placeholder="Chilometri attuali">
+        <input type="text" id="v-name" placeholder="Nome (es. Ducati)">
+        <input type="number" id="v-km" placeholder="Chilometri">
         <button id="save-btn" class="btn">Salva</button>
         <button id="cancel-btn" class="btn" style="background: #666;">Annulla</button>
     </div>
 
     <script type="module">
-        // Importa Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Tua configurazione personale
-        const firebaseConfig = {const firebaseConfig = {
-    apiKey: "AIzaSyA718KdmKNnvTYLsjkb3cH-hkVHwc8SEyc",
-    authDomain: "garage-fd19b.firebaseapp.com",
-    projectId: "garage-fd19b",
-    storageBucket: "garage-fd19b.firebasestorage.app",
-    messagingSenderId: "72192698630",
-    appId: "1:72192698630:web:db80bd0150f62ab9199687"
-  };
-            };
+        // CONFIGURAZIONE CORRETTA DAL TUO PROGETTO
+        const firebaseConfig = {
+            apiKey: "AIzaSyA718KdmKNnvTYLsjkb3cH-hkVHwc8SEyc",
+            authDomain: "garage-fd19b.firebaseapp.com",
+            projectId: "garage-fd19b",
+            storageBucket: "garage-fd19b.firebasestorage.app",
+            messagingSenderId: "72192698630",
+            appId: "1:72192698630:web:db80bd0150f62ab9199687"
+        };
 
-        // Inizializza
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Elementi DOM
         const welcomeScreen = document.getElementById('welcome-screen');
         const garageScreen = document.getElementById('garage-screen');
         const addForm = document.getElementById('add-form');
         const vehicleList = document.getElementById('vehicle-list');
 
-        // FUNZIONE: Entra nel Garage (Login Anonimo)
         document.getElementById('login-btn').onclick = async () => {
             try {
                 await signInAnonymously(auth);
@@ -75,11 +68,10 @@
                 garageScreen.classList.remove('hidden');
                 caricaVeicoli();
             } catch (error) {
-                alert("Errore di connessione al database: " + error.message);
+                alert("Errore API Key: Assicurati di aver incollato tutto bene! " + error.message);
             }
         };
 
-        // FUNZIONE: Carica Veicoli in tempo reale
         function caricaVeicoli() {
             const q = query(collection(db, "veicoli"), orderBy("nome"));
             onSnapshot(q, (snapshot) => {
@@ -89,16 +81,14 @@
                     const div = document.createElement('div');
                     div.className = 'vehicle-card';
                     div.innerHTML = `
-                        <strong>${v.nome}</strong><br>
-                        KM: ${v.km}
-                        <span class="delete-btn" onclick="eliminaVeicolo('${docSnap.id}')">X</span>
+                        <strong>${v.nome}</strong><br>KM: ${v.km}
+                        <span class="delete-btn" onclick="window.elimina('${docSnap.id}')">X</span>
                     `;
                     vehicleList.appendChild(div);
                 });
             });
         }
 
-        // FUNZIONE: Salva Veicolo
         document.getElementById('save-btn').onclick = async () => {
             const nome = document.getElementById('v-name').value;
             const km = document.getElementById('v-km').value;
@@ -111,7 +101,6 @@
             }
         };
 
-        // Gestione Menu
         document.getElementById('show-add-form').onclick = () => {
             garageScreen.classList.add('hidden');
             addForm.classList.remove('hidden');
@@ -121,11 +110,8 @@
             garageScreen.classList.remove('hidden');
         };
 
-        // Esposizione per eliminazione
-        window.eliminaVeicolo = async (id) => {
-            if(confirm("Eliminare questo veicolo?")) {
-                await deleteDoc(doc(db, "veicoli", id));
-            }
+        window.elimina = async (id) => {
+            if(confirm("Eliminare?")) await deleteDoc(doc(db, "veicoli", id));
         };
     </script>
 </body>
