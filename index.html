@@ -2,154 +2,130 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Garage Online</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        body { font-family: 'Arial Black', sans-serif; background-color: #f4f4f4; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-transform: uppercase; letter-spacing: -1px; }
+        .btn { background: #12192c; color: white; padding: 15px 25px; border: none; border-radius: 10px; cursor: pointer; font-size: 18px; width: 100%; margin-top: 10px; text-transform: uppercase; }
+        .hidden { display: none; }
+        .vehicle-card { background: #eee; margin: 10px 0; padding: 15px; border-radius: 10px; text-align: left; position: relative; }
+        .delete-btn { position: absolute; right: 10px; top: 10px; color: red; cursor: pointer; font-weight: bold; }
+        input { width: calc(100% - 20px); padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
-<body class="bg-slate-100">
-    <div id="root"></div>
+<body>
 
-    <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo, useRef } = React;
+    <div id="welcome-screen" class="container">
+        <h1>Garage</h1>
+        <div style="margin: 40px 0;">
+            <h2 style="font-size: 40px;">BENVENUTO</h2>
+        </div>
+        <button id="login-btn" class="btn">Entra nel Garage</button>
+    </div>
 
-        // --- INSERISCI QUI LE TUE CHIAVI FIREBASE ---
-       const firebaseConfig = {
-  apiKey: "AIzaSyA718KdmKNnvTYLsjkb3cH-hkVHwc8SEyc",
-  authDomain: "garage-fd19b.firebaseapp.com",
-  projectId: "garage-fd19b",
-  storageBucket: "garage-fd19b.firebasestorage.app",
-  messagingSenderId: "72192698630",
-  appId: "1:72192698630:web:db80bd0150f62ab9199687"
-};
+    <div id="garage-screen" class="container hidden">
+        <h1>I miei mezzi</h1>
+        <div id="vehicle-list"></div>
+        <button id="show-add-form" class="btn" style="background: #28a745;">+ Aggiungi</button>
+    </div>
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+    <div id="add-form" class="container hidden" style="margin-top: 20px;">
+        <h3>Nuovo Veicolo</h3>
+        <input type="text" id="v-name" placeholder="Nome (es. Ducati Monster)">
+        <input type="number" id="v-km" placeholder="Chilometri attuali">
+        <button id="save-btn" class="btn">Salva</button>
+        <button id="cancel-btn" class="btn" style="background: #666;">Annulla</button>
+    </div>
 
-        // --- COMPONENTI UI ---
-        const Card = ({ children, className = "" }) => (
-            <div className={`bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 ${className}`}>{children}</div>
-        );
+    <script type="module">
+        // Importa Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // --- APP PRINCIPALE ---
-        function App() {
-            const [view, setView] = useState('login');
-            const [user, setUser] = useState(null);
-            const [bikes, setBikes] = useState([]);
-            const [activeBike, setActiveBike] = useState(null);
-            const [loading, setLoading] = useState(true);
+        // Tua configurazione personale
+        const firebaseConfig = {
+            apiKey: "AIzaSyA718KdmKNnvTYLsjkb3cH-hkVHwc8SEyc",
+            authDomain: "garage-fd19b.firebaseapp.com",
+            projectId: "garage-fd19b",
+            storageBucket: "garage-fd19b.firebasestorage.app",
+            messagingSenderId: "72192698630",
+            appId: "1:72192698630:web:db80bd0150f62ab9199687"
+        };
 
-            // Login automatico/gestione sessione
-            useEffect(() => {
-                return auth.onAuthStateChanged(u => {
-                    setUser(u);
-                    setLoading(false);
-                    if(u) setView('garage');
+        // Inizializza
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Elementi DOM
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const garageScreen = document.getElementById('garage-screen');
+        const addForm = document.getElementById('add-form');
+        const vehicleList = document.getElementById('vehicle-list');
+
+        // FUNZIONE: Entra nel Garage (Login Anonimo)
+        document.getElementById('login-btn').onclick = async () => {
+            try {
+                await signInAnonymously(auth);
+                welcomeScreen.classList.add('hidden');
+                garageScreen.classList.remove('hidden');
+                caricaVeicoli();
+            } catch (error) {
+                alert("Errore di connessione al database: " + error.message);
+            }
+        };
+
+        // FUNZIONE: Carica Veicoli in tempo reale
+        function caricaVeicoli() {
+            const q = query(collection(db, "veicoli"), orderBy("nome"));
+            onSnapshot(q, (snapshot) => {
+                vehicleList.innerHTML = "";
+                snapshot.forEach((docSnap) => {
+                    const v = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = 'vehicle-card';
+                    div.innerHTML = `
+                        <strong>${v.nome}</strong><br>
+                        KM: ${v.km}
+                        <span class="delete-btn" onclick="eliminaVeicolo('${docSnap.id}')">X</span>
+                    `;
+                    vehicleList.appendChild(div);
                 });
-            }, []);
-
-            // Caricamento veicoli
-            useEffect(() => {
-                if (!user) return;
-                return db.collection("bikes").onSnapshot(snap => {
-                    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setBikes(data);
-                });
-            }, [user]);
-
-            if (loading) return <div className="h-screen flex items-center justify-center font-bold">CARICAMENTO...</div>;
-
-            return (
-                <div className="max-w-md mx-auto min-h-screen flex flex-col bg-slate-50 relative">
-                    {/* Header */}
-                    <header className="p-6 flex justify-between items-center bg-white border-b">
-                        <h1 className="text-2xl font-black italic uppercase tracking-tighter">Garage</h1>
-                        {user && (
-                            <button onClick={() => auth.signOut()} className="text-xs font-bold text-slate-400 uppercase">Esci</button>
-                        )}
-                    </header>
-
-                    {/* Contenuto Dinamico */}
-                    <main className="flex-1 p-5 pb-24">
-                        {view === 'login' && (
-                            <div className="py-10 text-center">
-                                <h2 className="text-4xl font-black mb-8">BENVENUTO</h2>
-                                <button onClick={() => auth.signInAnonymously()} className="w-full bg-slate-900 text-white p-5 rounded-3xl font-bold">ENTRA NEL GARAGE</button>
-                            </div>
-                        )}
-
-                        {view === 'garage' && (
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-end mb-4">
-                                    <h2 className="text-xl font-extrabold uppercase italic">I miei mezzi</h2>
-                                    <button className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold">+ AGGIUNGI</button>
-                                </div>
-                                {bikes.map(bike => (
-                                    <Card key={bike.id} className="flex justify-between items-center cursor-pointer" onClick={() => { setActiveBike(bike); setView('dashboard'); }}>
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{bike.brand || 'Moto'}</p>
-                                            <h3 className="text-2xl font-black italic uppercase">{bike.model}</h3>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-xl font-black text-orange-500">{bike.odometer || 0}</p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase">KM Totali</p>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
-
-                        {view === 'dashboard' && activeBike && (
-                            <div className="space-y-6">
-                                <button onClick={() => setView('garage')} className="text-sm font-bold text-slate-400">← TORNA AL GARAGE</button>
-                                <div className="text-center">
-                                    <h2 className="text-4xl font-black italic uppercase">{activeBike.model}</h2>
-                                    <div className="inline-block bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-black mt-2">
-                                        {activeBike.odometer} KM
-                                    </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Card className="text-center bg-slate-900 text-white">
-                                        <p className="text-[10px] font-bold uppercase opacity-60">Scadenza Olio</p>
-                                        <p className="text-lg font-black italic">500 KM</p>
-                                    </Card>
-                                    <Card className="text-center">
-                                        <p className="text-[10px] font-bold uppercase text-slate-400">Gomme</p>
-                                        <p className="text-lg font-black italic">80%</p>
-                                    </Card>
-                                </div>
-                            </div>
-                        )}
-                    </main>
-
-                    {/* Navigazione Inferiore */}
-                    {user && (
-                        <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[350px] bg-slate-900 rounded-[2.5rem] p-4 shadow-2xl flex justify-around items-center">
-                            <button onClick={() => setView('garage')} className={`text-[10px] font-bold uppercase ${view === 'garage' ? 'text-orange-500' : 'text-slate-500'}`}>Garage</button>
-                            <button onClick={() => setView('dashboard')} className={`text-[10px] font-bold uppercase ${view === 'dashboard' ? 'text-orange-500' : 'text-slate-500'}`}>Stato</button>
-                            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">+</div>
-                            <button className="text-[10px] font-bold uppercase text-slate-500">Storico</button>
-                            <button className="text-[10px] font-bold uppercase text-slate-500">Profilo</button>
-                        </nav>
-                    )}
-                </div>
-            );
+            });
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        // FUNZIONE: Salva Veicolo
+        document.getElementById('save-btn').onclick = async () => {
+            const nome = document.getElementById('v-name').value;
+            const km = document.getElementById('v-km').value;
+            if (nome && km) {
+                await addDoc(collection(db, "veicoli"), { nome, km: parseInt(km) });
+                addForm.classList.add('hidden');
+                garageScreen.classList.remove('hidden');
+                document.getElementById('v-name').value = "";
+                document.getElementById('v-km').value = "";
+            }
+        };
+
+        // Gestione Menu
+        document.getElementById('show-add-form').onclick = () => {
+            garageScreen.classList.add('hidden');
+            addForm.classList.remove('hidden');
+        };
+        document.getElementById('cancel-btn').onclick = () => {
+            addForm.classList.add('hidden');
+            garageScreen.classList.remove('hidden');
+        };
+
+        // Esposizione per eliminazione
+        window.eliminaVeicolo = async (id) => {
+            if(confirm("Eliminare questo veicolo?")) {
+                await deleteDoc(doc(db, "veicoli", id));
+            }
+        };
     </script>
 </body>
 </html>
