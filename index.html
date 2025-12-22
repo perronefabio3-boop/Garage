@@ -104,6 +104,9 @@
                 return () => clearInterval(timer);
             }, []);
 
+            // Controllo bypass per l'amministratore (sempre vero se l'email è quella admin)
+            const isAdmin = session?.role === 'admin' || (session?.email && session.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+
             return (
                 <header className="bg-slate-900 text-white p-5 flex justify-between items-center shadow-lg shrink-0 relative">
                     <div className="flex items-center gap-3 z-10">
@@ -125,7 +128,7 @@
                     </div>
 
                     <div className="flex items-center gap-2 z-10">
-                        {session?.role === 'admin' && (
+                        {isAdmin && (
                             <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600 shadow-lg' : 'bg-slate-800'}`}>
                                 <Icon name="Shield" size={20} />
                             </button>
@@ -203,13 +206,12 @@
                     const l = s.docs.map(d => ({ ...d.data(), id: d.id }));
                     setAllUsers(l);
                     
-                    // Sincronizza i dati della sessione con il database se l'utente esiste
                     if (session?.email) {
                         const curr = l.find(u => String(u.email).toLowerCase() === String(session.email).toLowerCase());
                         if (curr) {
                             setSession(prev => {
-                                // Se l'utente è l'admin principale, forziamo il ruolo admin a prescindere dal DB
-                                const isSuperAdmin = prev.email === ADMIN_EMAIL;
+                                // Protezione admin rinforzata durante il sync
+                                const isSuperAdmin = String(prev?.email || session.email).toLowerCase() === ADMIN_EMAIL.toLowerCase();
                                 return { 
                                     ...prev, 
                                     ...curr, 
@@ -235,8 +237,10 @@
                 e.preventDefault();
                 setLoginError('');
                 
+                const emailInput = loginForm.email.toLowerCase().trim();
+                
                 // Controllo Admin Principale
-                if (loginForm.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && loginForm.password === ADMIN_PASS) {
+                if (emailInput === ADMIN_EMAIL.toLowerCase() && loginForm.password === ADMIN_PASS) {
                     setSession({ email: ADMIN_EMAIL, role: 'admin' });
                     setView('garage');
                     return;
@@ -247,7 +251,7 @@
                     const snap = await db.collection(`artifacts/${appId}/public/data/users`).get();
                     const found = snap.docs.find(d => {
                         const data = d.data();
-                        return data.email.toLowerCase() === loginForm.email.toLowerCase() && data.password === loginForm.password;
+                        return String(data.email).toLowerCase().trim() === emailInput && data.password === loginForm.password;
                     });
                     
                     if (found) { 
@@ -275,7 +279,11 @@
                 setTimeout(() => setUpdateStatus(''), 2000);
             };
 
-            const visibleBikes = useMemo(() => session?.role === 'admin' ? bikes : bikes.filter(b => String(b.userEmail).toLowerCase() === String(session?.email).toLowerCase()), [bikes, session]);
+            const visibleBikes = useMemo(() => {
+                const isAdmin = session?.role === 'admin' || (session?.email && session.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+                if (isAdmin) return bikes;
+                return bikes.filter(b => String(b.userEmail).toLowerCase() === String(session?.email).toLowerCase());
+            }, [bikes, session]);
 
             if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse">Garage Loading...</div>;
 
@@ -321,7 +329,7 @@
                                                 <div className="text-left">
                                                     <h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3>
                                                     <p className="text-slate-400 font-bold text-xs uppercase">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>
-                                                    {session?.role === 'admin' && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block">{String(b.userEmail)}</p>}
+                                                    {(session?.role === 'admin' || session?.email === ADMIN_EMAIL) && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block">{String(b.userEmail)}</p>}
                                                 </div>
                                                 <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors" />
                                             </div>
@@ -334,7 +342,7 @@
                             {view === 'dashboard' && activeBike && (
                                 <div className="space-y-6 animate-in">
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left">
-                                        <div className="relative z-10 text-left">
+                                        <div className="relative z-10">
                                             <h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2>
                                             <p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p>
                                         </div>
@@ -359,7 +367,7 @@
 
                             {/* AGGIUNGI VEICOLO */}
                             {view === 'addBike' && (
-                                <div className="space-y-6 animate-in text-left text-left">
+                                <div className="space-y-6 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Nuovo Veicolo</h2>
                                     <form onSubmit={async (e) => {
                                         e.preventDefault();
@@ -380,7 +388,7 @@
                             )}
 
                             {/* ADMIN PANEL */}
-                            {view === 'admin' && session?.role === 'admin' && (
+                            {view === 'admin' && (session?.role === 'admin' || session?.email === ADMIN_EMAIL) && (
                                 <div className="space-y-8 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
                                     
