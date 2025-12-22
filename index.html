@@ -112,7 +112,7 @@
                                 <Icon name="ChevronLeft" size={24} className="text-orange-500" />
                             </button>
                         )}
-                        <h1 className="font-black italic uppercase tracking-tighter text-xl">Garage</h1>
+                        <h1 className="font-black italic uppercase tracking-tighter text-xl leading-none">Garage</h1>
                     </div>
 
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center">
@@ -126,7 +126,7 @@
 
                     <div className="flex items-center gap-2 z-10">
                         {session?.role === 'admin' && (
-                            <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600' : 'bg-slate-800'}`}>
+                            <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600 shadow-lg' : 'bg-slate-800'}`}>
                                 <Icon name="Shield" size={20} />
                             </button>
                         )}
@@ -178,6 +178,8 @@
             
             const [newBike, setNewBike] = useState({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000' });
             const [newLog, setNewLog] = useState({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
+            
+            // Stato iniziale per nuovo utente con ruolo predefinito 'user'
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
 
             const handleLogout = useCallback(() => {
@@ -259,9 +261,10 @@
                         <Header view={view} setView={setView} onBack={() => setView('garage')} onLogout={handleLogout} session={session} />
 
                         <main className="flex-1 overflow-y-auto p-5 pb-10 hide-scrollbar">
+                            {/* LOGIN */}
                             {view === 'login' && (
                                 <div className="py-10 space-y-8 animate-in text-center">
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 text-center">
                                         <div className="mx-auto w-fit"><AppLogo size={130} /></div>
                                         <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Garage Fleet</h2>
                                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Smart Snoopy Edition</p>
@@ -275,6 +278,7 @@
                                 </div>
                             )}
 
+                            {/* GARAGE */}
                             {view === 'garage' && (
                                 <div className="space-y-6 animate-in">
                                     <div className="flex justify-between items-end text-left">
@@ -284,7 +288,11 @@
                                     <div className="grid gap-4">
                                         {visibleBikes.map(b => (
                                             <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group text-left">
-                                                <div><h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3><p className="text-slate-400 font-bold text-xs uppercase">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>{session?.role === 'admin' && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest">{String(b.userEmail)}</p>}</div>
+                                                <div className="text-left">
+                                                    <h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3>
+                                                    <p className="text-slate-400 font-bold text-xs uppercase">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>
+                                                    {session?.role === 'admin' && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block">{String(b.userEmail)}</p>}
+                                                </div>
                                                 <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors" />
                                             </div>
                                         ))}
@@ -292,10 +300,14 @@
                                 </div>
                             )}
 
+                            {/* DASHBOARD */}
                             {view === 'dashboard' && activeBike && (
                                 <div className="space-y-6 animate-in">
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left">
-                                        <div className="relative z-10 text-left"><h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2><p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p></div>
+                                        <div className="relative z-10">
+                                            <h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2>
+                                            <p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p>
+                                        </div>
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
                                     {(() => {
@@ -315,8 +327,9 @@
                                 </div>
                             )}
 
+                            {/* AGGIUNGI VEICOLO */}
                             {view === 'addBike' && (
-                                <div className="space-y-6 animate-in text-left">
+                                <div className="space-y-6 animate-in text-left text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Nuovo Veicolo</h2>
                                     <form onSubmit={async (e) => {
                                         e.preventDefault();
@@ -326,23 +339,38 @@
                                         setNewBike({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000' });
                                         setView('garage');
                                     }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100">
-                                        <input required className="w-full p-4 rounded-2xl font-bold" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Modello" />
+                                        <input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Modello" />
                                         <div className="grid grid-cols-2 gap-3">
-                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} placeholder="Km" />
-                                            <input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} />
+                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} placeholder="Km" />
+                                            <input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} />
                                         </div>
-                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva</button>
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva nel Garage</button>
                                     </form>
                                 </div>
                             )}
 
+                            {/* ADMIN PANEL AGGIORNATO */}
                             {view === 'admin' && session?.role === 'admin' && (
                                 <div className="space-y-8 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin</h2>
-                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl">
-                                        <h3 className="font-black uppercase text-xs text-orange-500">Nuovo Cliente</h3>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
+                                    
+                                    {/* CREAZIONE NUOVO UTENTE CON RUOLO */}
+                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left">
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2"><Icon name="UserPlus" size={18}/> Nuovo Profilo</h3>
                                         <input placeholder="Email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
                                         <input placeholder="Password" type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+                                        
+                                        {/* SELETTORE RUOLO */}
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Ruolo Accesso</label>
+                                            <select className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" 
+                                                    value={newUser.role} 
+                                                    onChange={e => setNewUser({...newUser, role: e.target.value})}>
+                                                <option value="user">Utente Standard (Cliente)</option>
+                                                <option value="admin">Amministratore (Admin)</option>
+                                            </select>
+                                        </div>
+
                                         <div className="grid grid-cols-2 gap-2 text-left">
                                             <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
                                             <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
@@ -350,17 +378,67 @@
                                         <button onClick={async () => { 
                                             await db.collection(`artifacts/${appId}/public/data/users`).add({ ...newUser, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
                                             setNewUser({email:'', password:'', role:'user', templateStandardId:'', templateUrgentId:''}); 
-                                            alert("Creato!");
-                                        }} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">Registra</button>
+                                            alert("Profilo creato correttamente!");
+                                        }} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">Registra Utente</button>
                                     </div>
-                                    <div className="space-y-3">
+
+                                    {/* LISTA UTENTI CON VISUALIZZAZIONE RUOLO */}
+                                    <div className="space-y-3 text-left">
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Lista Utenti</h3>
                                         {allUsers.map(u => (
-                                            <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm">
-                                                <div className="flex flex-col gap-1"><p className="font-black text-sm text-slate-800">{String(u.email)}</p><p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest">{u.role}</p></div>
-                                                <button onClick={() => { if(confirm('Eliminare?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={20}/></button>
+                                            <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm text-left">
+                                                <div className="flex flex-col gap-1 text-left">
+                                                    <p className="font-black text-sm text-slate-800 leading-none">{String(u.email)}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                                                            {u.role === 'admin' ? 'Amministratore' : 'Utente'}
+                                                        </span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase">ID: {u.templateStandardId || 'Std'}</span>
+                                                    </div>
+                                                </div>
+                                                <button onClick={() => { if(confirm('Eliminare definitivamente?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={20}/></button>
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* HISTORY */}
+                            {view === 'history' && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Cronologia</h2>
+                                    <div className="space-y-4 text-left">
+                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic">Nessun log trovato.</div> : logs.map(l => (
+                                            <div key={l.id} className="bg-slate-50 p-6 rounded-[2rem] border-2 border-white shadow-sm flex justify-between items-start text-left">
+                                                <div className="text-left"><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div>
+                                                <div className="text-right text-left"><p className="font-black text-slate-900">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic">€{l.cost}</p></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* REGISTRA LAVORO */}
+                            {view === 'addLog' && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Registra Lavoro</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const kv = Number(newLog.km) || 0;
+                                        const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                                        await db.collection(`${path}/logs`).add({ ...newLog, km: kv, cost: Number(newLog.cost) || 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                        if (kv > (Number(activeBike?.odometer) || 0)) await db.doc(path).update({ odometer: kv });
+                                        setView('dashboard');
+                                        setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
+                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left">
+                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione (Es. Cambio Olio)" />
+                                        <div className="grid grid-cols-2 gap-3 text-left">
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" />
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" />
+                                        </div>
+                                        <input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.date} onChange={e => setNewLog({...newLog, date: e.target.value})} />
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active transition-all">Registra</button>
+                                    </form>
                                 </div>
                             )}
 
