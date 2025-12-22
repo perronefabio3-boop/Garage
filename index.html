@@ -3,114 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garage Online</title>
+    <title>Garage - Snoopy Edition</title>
+    
+    <!-- Librerie via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Firebase SDK (Versioni Compatibili) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        h1 { color: #12192c; text-transform: uppercase; margin-bottom: 30px; }
-        .btn { background: #12192c; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-add { background: #28a745; margin-bottom: 20px; }
-        .btn-delete { background: #dc3545; padding: 5px 10px; font-size: 12px; width: auto; margin-left: 10px; border-radius: 5px; color: white; border: none; cursor: pointer; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .item { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #12192c; }
-        .hidden { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            background-color: #f1f5f9;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .btn-active:active { transform: scale(0.96); transition: transform 0.1s; }
     </style>
 </head>
 <body>
+    <div id="root"></div>
 
-<div class="card">
-    <h1>Garage</h1>
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-    <div id="welcome-section">
-        <h2 style="font-size: 30px; margin: 40px 0;">BENVENUTO</h2>
-        <button class="btn" id="enter-btn">ENTRA NEL GARAGE</button>
-    </div>
+        // --- CONFIGURAZIONE FIREBASE (VERIFICATA) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA718KdmKNnvtYLsjkb3cH-hkVHwc8SEyc",
+            authDomain: "garage-fd19b.firebaseapp.com",
+            projectId: "garage-fd19b",
+            storageBucket: "garage-fd19b.firebasestorage.app",
+            messagingSenderId: "72192698630",
+            appId: "1:72192698630:web:db80bd0150f62ab9199687"
+        };
 
-    <div id="main-section" class="hidden">
-        <button class="btn btn-add" id="btn-new">+ AGGIUNGI MEZZO</button>
-        <div id="list-container"></div>
-    </div>
+        // Inizializzazione Firebase
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-    <div id="form-section" class="hidden">
-        <h3>Nuovo Veicolo</h3>
-        <input type="text" id="name-in" placeholder="Nome mezzo">
-        <input type="number" id="km-in" placeholder="Chilometri">
-        <button class="btn" id="save-btn">SALVA</button>
-        <button class="btn" style="background:#6c757d" id="back-btn">ANNULLA</button>
-    </div>
-</div>
+        // Costanti di Sistema
+        const appId = "garage_snoopy_final";
+        const ADMIN_EMAIL = 'info@fabio-perrone.com';
+        const ADMIN_PASS = 'prova';
+        const EMAILJS_SERVICE_ID = "service_pr7ur0z";
+        const EMAILJS_PUBLIC_KEY = "cpH3oP_HkZQAGG71-";
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    // CONFIGURAZIONE VERIFICATA
-    const firebaseConfig = {
-        apiKey: "AIzaSyA718KdmKNnvtYLsjkb3cH-hkVHwc8SEyc",
-        authDomain: "garage-fd19b.firebaseapp.com",
-        projectId: "garage-fd19b",
-        storageBucket: "garage-fd19b.firebasestorage.app",
-        messagingSenderId: "72192698630",
-        appId: "1:72192698630:web:db80bd0150f62ab9199687"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    const welcome = document.getElementById('welcome-section');
-    const main = document.getElementById('main-section');
-    const form = document.getElementById('form-section');
-    const list = document.getElementById('list-container');
-
-    // Azione Entra
-    document.getElementById('enter-btn').onclick = async () => {
-        try {
-            await signInAnonymously(auth);
-            welcome.classList.add('hidden');
-            main.classList.remove('hidden');
-            startSync();
-        } catch (e) {
-            alert("Errore: " + e.message);
+        // --- COMPONENTE ICONE SVG ---
+        function Icon({ name, size = 24, className = "" }) {
+            const icons = {
+                Plus: <path d="M12 5v14M5 12h14"/>,
+                History: <><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></>,
+                Gauge: <><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></>,
+                Trash2: <><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>,
+                ChevronLeft: <path d="m15 18-6-6 6-6"/>,
+                LogOut: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></>,
+                Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
+                Bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></>,
+                UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="16" x2="22" y1="11" y2="11"/></>,
+                Bike: <><circle cx="18.5" cy="17.5" r="2.5"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></>,
+                Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+                Edit2: <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>,
+                Mail: <><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>,
+                Lock: <><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>
+            };
+            return (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name] || null}
+                </svg>
+            );
         }
-    };
 
-    document.getElementById('btn-new').onclick = () => { main.classList.add('hidden'); form.classList.remove('hidden'); };
-    document.getElementById('back-btn').onclick = () => { form.classList.add('hidden'); main.classList.remove('hidden'); };
-
-    // Salva Mezzo
-    document.getElementById('save-btn').onclick = async () => {
-        const n = document.getElementById('name-in').value;
-        const k = document.getElementById('km-in').value;
-        if(n && k) {
-            await addDoc(collection(db, "veicoli"), { nome: n, km: parseInt(k), data: Date.now() });
-            form.classList.add('hidden');
-            main.classList.remove('hidden');
-            document.getElementById('name-in').value = '';
-            document.getElementById('km-in').value = '';
+        // --- COMPONENTE LOGO ---
+        function AppLogo({ size = 100 }) {
+            return (
+                <div className="flex items-center justify-center bg-white rounded-full overflow-hidden border-2 border-orange-500 shadow-sm" style={{ width: size, height: size }}>
+                    <Icon name="Bike" size={size * 0.6} className="text-orange-500" />
+                </div>
+            );
         }
-    };
 
-    // Carica Dati
-    function startSync() {
-        const q = query(collection(db, "veicoli"), orderBy("data", "desc"));
-        onSnapshot(q, (snapshot) => {
-            list.innerHTML = '';
-            snapshot.forEach((s) => {
-                const d = s.data();
-                const div = document.createElement('div');
-                div.className = 'item';
-                div.innerHTML = `<div><b>${d.nome}</b><br>${d.km} KM</div>`;
-                const b = document.createElement('button');
-                b.className = 'btn-delete';
-                b.innerText = 'X';
-                b.onclick = () => deleteDoc(doc(db, "veicoli", s.id));
-                div.appendChild(b);
-                list.appendChild(div);
-            });
-        });
-    }
-</script>
+        // --- COMPONENTE HEADER ---
+        function Header({ setView, view, onBack, session, onLogout }) {
+            const [dateTime, setDateTime] = useState(new Date());
+            useEffect(() => {
+                const timer = setInterval(() => setDateTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            return (
+                <header className="bg-slate-900 text-white p-5 flex justify-between items-center shadow-lg shrink-0 relative">
+                    <div className="flex items-center gap-3 z-10">
+                        {view !== 'garage' && view !== 'login' && (
+                            <button onClick={onBack} className="p-2 bg-slate-800 rounded-xl btn-active transition-transform">
+                                <Icon name="ChevronLeft" size={24} className="text-orange-500" />
+                            </button>
+                        )}
+                        <h1 className="font-black italic uppercase tracking-tighter text-xl">Garage</h1>
+                    </div>
+
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center">
+                        <span className="text-2xl font-black tracking-widest text-orange-500 leading-none drop-shadow-md">
+                            {dateTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 opacity-80">
+                            {dateTime.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 z-10">
+                        {session?.role === 'admin' && (
+                            <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600' : 'bg-slate-800'}`}>
+                                <Icon name="Shield" size={20} />
+                            </button>
+                        )}
+                        {session && <button onClick={onLogout} className="p-2 bg-slate-800 text-red-400 rounded-xl btn-active transition-transform"><Icon name="LogOut" size={20}/></button>}
+                    </div>
+                </header>
+            );
+        }
+
+        // --- COMPONENTE BOTTOM NAV ---
+        function BottomNav({ view, setView, activeBike }) {
+            if (!activeBike || ['admin', 'addBike', 'login', 'addLog'].includes(view)) return null;
+            return (
+                <nav className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-8 md:p-4 max-w-md mx-auto rounded-t-[2.5rem] shadow-[0_-8px_40px_rgba(0,0,0,0.12)] z-40">
+                    <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-orange-500 scale-110' : 'text-slate-400 opacity-60'}`}>
+                        <Icon name="Gauge" size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-tighter">Stato</span>
+                    </button>
+                    <button onClick={() => setView('history')} className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-orange-500 scale-110' : 'text-slate-400 opacity-60'}`}>
+                        <Icon name="History" size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-center">Storico</span>
+                    </button>
+                    <div className="relative -top-12">
+                        <button onClick={() => setView('addLog')} className="bg-orange-500 text-white p-5 rounded-full shadow-xl shadow-orange-500/20 border-4 border-white btn-active transition-all hover:rotate-90">
+                            <Icon name="Plus" size={32} strokeWidth={3} />
+                        </button>
+                    </div>
+                    <div className="w-12" />
+                </nav>
+            );
+        }
+
+        // --- APP PRINCIPALE ---
+        function App() {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [session, setSession] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [view, setView] = useState('login');
+            
+            const [bikes, setBikes] = useState([]);
+            const [selectedBikeId, setSelectedBikeId] = useState(null);
+            const [activeBike, setActiveBike] = useState(null);
+            const [logs, setLogs] = useState([]);
+            const [allUsers, setAllUsers] = useState([]);
+
+            const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+            const [loginError, setLoginError] = useState('');
+            const [updateStatus, setUpdateStatus] = useState('');
+            
+            const [newBike, setNewBike] = useState({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000' });
+            const [newLog, setNewLog] = useState({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
+            const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
+
+            const handleLogout = useCallback(() => {
+                setSession(null); setSelectedBikeId(null); setActiveBike(null); setView('login');
+            }, []);
+
+            // Auth
+            useEffect(() => {
+                const init = async () => {
+                    await auth.signInAnonymously();
+                };
+                init();
+                return auth.onAuthStateChanged(u => { setCurrentUser(u); setLoading(false); });
+            }, []);
+
+            // Database Listener
+            useEffect(() => {
+                if (!currentUser) return;
+                const bPath = `artifacts/${appId}/public/data`;
+                const unsubB = db.collection(`${bPath}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
+                const unsubU = db.collection(`${bPath}/users`).onSnapshot(s => {
+                    const l = s.docs.map(d => ({ ...d.data(), id: d.id }));
+                    setAllUsers(l);
+                    if (session) {
+                        const curr = l.find(u => String(u.email) === String(session.email));
+                        if (curr) setSession(p => ({ ...p, ...curr }));
+                    }
+                });
+                return () => { unsubB(); unsubU(); };
+            }, [currentUser, session?.email]);
+
+            // Dettaglio Veicolo
+            useEffect(() => {
+                if (!currentUser || !selectedBikeId) return;
+                const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                const unsubB = db.doc(path).onSnapshot(s => s.exists && setActiveBike({ ...s.data(), id: s.id }));
+                const unsubL = db.collection(`${path}/logs`).onSnapshot(s => setLogs(s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => new Date(b.date) - new Date(a.date))));
+                return () => { unsubB(); unsubL(); };
+            }, [currentUser, selectedBikeId]);
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setLoginError('');
+                if (loginForm.email === ADMIN_EMAIL && loginForm.password === ADMIN_PASS) {
+                    setSession({ email: ADMIN_EMAIL, role: 'admin' });
+                    setView('garage');
+                    return;
+                }
+                const snap = await db.collection(`artifacts/${appId}/public/data/users`).get();
+                const found = snap.docs.find(d => d.data().email === loginForm.email && d.data().password === loginForm.password);
+                if (found) { setSession({ ...found.data(), id: found.id }); setView('garage'); }
+                else setLoginError('Credenziali errate');
+            };
+
+            const sendEmail = async () => {
+                if (!activeBike) return;
+                setUpdateStatus('...');
+                const d = (Number(activeBike.odometer) || 0) - (Number(activeBike.lastServiceKm) || 0);
+                const isU = d >= ((Number(activeBike.serviceIntervalKm) || 12000) - 500);
+                const t = isU ? (session?.templateUrgentId || "template_xnt01vl") : (session?.templateStandardId || "template_xnt01vl");
+                try {
+                    const r = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ service_id: EMAILJS_SERVICE_ID, template_id: t, user_id: EMAILJS_PUBLIC_KEY, template_params: { to_email: String(session?.email || ""), bike_model: String(activeBike.model), deadline: activeBike.nextServiceDeadlineDate } })
+                    });
+                    setUpdateStatus(r.ok ? 'OK' : 'ERR');
+                } catch { setUpdateStatus('ERR'); }
+                setTimeout(() => setUpdateStatus(''), 2000);
+            };
+
+            const visibleBikes = useMemo(() => session?.role === 'admin' ? bikes : bikes.filter(b => String(b.userEmail) === String(session?.email)), [bikes, session]);
+
+            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse">Garage Loading...</div>;
+
+            return (
+                <div className="min-h-screen bg-slate-100 text-slate-900 font-sans hide-scrollbar">
+                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left">
+                        
+                        <Header view={view} setView={setView} onBack={() => setView('garage')} onLogout={handleLogout} session={session} />
+
+                        <main className="flex-1 overflow-y-auto p-5 pb-10 hide-scrollbar">
+                            {view === 'login' && (
+                                <div className="py-10 space-y-8 animate-in text-center">
+                                    <div className="space-y-4">
+                                        <div className="mx-auto w-fit"><AppLogo size={130} /></div>
+                                        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Garage Fleet</h2>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Smart Snoopy Edition</p>
+                                    </div>
+                                    <form onSubmit={handleLogin} className="space-y-4 text-left">
+                                        <input required type="email" placeholder="Email" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
+                                        <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
+                                        {loginError && <p className="text-red-500 text-xs font-black text-center">{loginError}</p>}
+                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl hover:bg-black transition-colors btn-active">Entra</button>
+                                    </form>
+                                </div>
+                            )}
+
+                            {view === 'garage' && (
+                                <div className="space-y-6 animate-in">
+                                    <div className="flex justify-between items-end text-left">
+                                        <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">{session?.role === 'admin' ? 'Pannello Flotta' : 'I tuoi mezzi'}</p></div>
+                                        <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active"><Icon name="Plus" size={24}/></button>
+                                    </div>
+                                    <div className="grid gap-4">
+                                        {visibleBikes.map(b => (
+                                            <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group text-left">
+                                                <div><h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3><p className="text-slate-400 font-bold text-xs uppercase">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>{session?.role === 'admin' && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest">{String(b.userEmail)}</p>}</div>
+                                                <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {view === 'dashboard' && activeBike && (
+                                <div className="space-y-6 animate-in">
+                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left">
+                                        <div className="relative z-10 text-left"><h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2><p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p></div>
+                                        <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
+                                    </div>
+                                    {(() => {
+                                        const oV = Number(activeBike.odometer) || 0; const lV = Number(activeBike.lastServiceKm) || 0; const iV = Number(activeBike.serviceIntervalKm) || 12000; const dV = oV - lV; const iD = dV >= (iV - 1000);
+                                        return (
+                                            <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'}`}>
+                                                <div className="flex justify-between items-center mb-5"><div className="flex items-center gap-2"><Icon name="Gauge" className={iD ? 'text-red-500' : 'text-orange-500'} size={24} /><span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Tagliando</span></div>
+                                                <button onClick={sendEmail} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 btn-active"><Icon name="Bell" size={14} className="text-orange-500"/> {updateStatus || 'Sollecita'}</button></div>
+                                                <div className="space-y-2 text-left"><div className="flex justify-between font-black text-xs uppercase italic"><span>{dV.toLocaleString()} km fatti</span><span>Limite {iV.toLocaleString()}</span></div><div className="h-3 bg-slate-200 rounded-full overflow-hidden border border-slate-300"><div className={`h-full transition-all duration-1000 ${iD ? 'bg-red-500' : 'bg-orange-50'}`} style={{ width: `${Math.min(100, (dV/iV)*100)}%` }} /></div></div>
+                                            </div>
+                                        );
+                                    })()}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left"><Icon name="History" className="text-slate-400" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Registro</span></button>
+                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left"><Icon name="Plus" className="text-orange-500" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Intervento</span></button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {view === 'addBike' && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Nuovo Veicolo</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const lastDate = new Date(newBike.lastServiceDate);
+                                        const nextDate = new Date(lastDate.setFullYear(lastDate.getFullYear() + 1)).toISOString().split('T')[0];
+                                        await db.collection(`artifacts/${appId}/public/data/bikes`).add({ ...newBike, userId: currentUser.uid, userEmail: String(session?.email || ""), odometer: Number(newBike.odometer) || 0, lastServiceKm: Number(newBike.lastServiceKm) || 0, serviceIntervalKm: Number(newBike.serviceIntervalKm) || 12000, nextServiceDeadlineDate: nextDate, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                        setNewBike({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000' });
+                                        setView('garage');
+                                    }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100">
+                                        <input required className="w-full p-4 rounded-2xl font-bold" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Modello" />
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} placeholder="Km" />
+                                            <input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} />
+                                        </div>
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva</button>
+                                    </form>
+                                </div>
+                            )}
+
+                            {view === 'admin' && session?.role === 'admin' && (
+                                <div className="space-y-8 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin</h2>
+                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl">
+                                        <h3 className="font-black uppercase text-xs text-orange-500">Nuovo Cliente</h3>
+                                        <input placeholder="Email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
+                                        <input placeholder="Password" type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+                                        <div className="grid grid-cols-2 gap-2 text-left">
+                                            <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
+                                            <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
+                                        </div>
+                                        <button onClick={async () => { 
+                                            await db.collection(`artifacts/${appId}/public/data/users`).add({ ...newUser, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
+                                            setNewUser({email:'', password:'', role:'user', templateStandardId:'', templateUrgentId:''}); 
+                                            alert("Creato!");
+                                        }} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">Registra</button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {allUsers.map(u => (
+                                            <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm">
+                                                <div className="flex flex-col gap-1"><p className="font-black text-sm text-slate-800">{String(u.email)}</p><p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest">{u.role}</p></div>
+                                                <button onClick={() => { if(confirm('Eliminare?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={20}/></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                        </main>
+                        <BottomNav view={view} setView={setView} activeBike={activeBike} />
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
