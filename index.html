@@ -112,7 +112,7 @@
                                 <Icon name="ChevronLeft" size={24} className="text-orange-500" />
                             </button>
                         )}
-                        <h1 className="font-black italic uppercase tracking-tighter text-xl leading-none">Garage</h1>
+                        <h1 className="font-black italic uppercase tracking-tighter text-xl">Garage</h1>
                     </div>
 
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center">
@@ -179,7 +179,6 @@
             const [newBike, setNewBike] = useState({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000' });
             const [newLog, setNewLog] = useState({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
             
-            // Stato iniziale per nuovo utente con ruolo predefinito 'user'
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
 
             const handleLogout = useCallback(() => {
@@ -203,9 +202,21 @@
                 const unsubU = db.collection(`${bPath}/users`).onSnapshot(s => {
                     const l = s.docs.map(d => ({ ...d.data(), id: d.id }));
                     setAllUsers(l);
-                    if (session) {
-                        const curr = l.find(u => String(u.email) === String(session.email));
-                        if (curr) setSession(p => ({ ...p, ...curr }));
+                    
+                    // Sincronizza i dati della sessione con il database se l'utente esiste
+                    if (session?.email) {
+                        const curr = l.find(u => String(u.email).toLowerCase() === String(session.email).toLowerCase());
+                        if (curr) {
+                            setSession(prev => {
+                                // Se l'utente è l'admin principale, forziamo il ruolo admin a prescindere dal DB
+                                const isSuperAdmin = prev.email === ADMIN_EMAIL;
+                                return { 
+                                    ...prev, 
+                                    ...curr, 
+                                    role: isSuperAdmin ? 'admin' : (curr.role || 'user') 
+                                };
+                            });
+                        }
                     }
                 });
                 return () => { unsubB(); unsubU(); };
@@ -223,15 +234,29 @@
             const handleLogin = async (e) => {
                 e.preventDefault();
                 setLoginError('');
-                if (loginForm.email === ADMIN_EMAIL && loginForm.password === ADMIN_PASS) {
+                
+                // Controllo Admin Principale
+                if (loginForm.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && loginForm.password === ADMIN_PASS) {
                     setSession({ email: ADMIN_EMAIL, role: 'admin' });
                     setView('garage');
                     return;
                 }
-                const snap = await db.collection(`artifacts/${appId}/public/data/users`).get();
-                const found = snap.docs.find(d => d.data().email === loginForm.email && d.data().password === loginForm.password);
-                if (found) { setSession({ ...found.data(), id: found.id }); setView('garage'); }
-                else setLoginError('Credenziali errate');
+                
+                // Controllo altri utenti nel database
+                try {
+                    const snap = await db.collection(`artifacts/${appId}/public/data/users`).get();
+                    const found = snap.docs.find(d => {
+                        const data = d.data();
+                        return data.email.toLowerCase() === loginForm.email.toLowerCase() && data.password === loginForm.password;
+                    });
+                    
+                    if (found) { 
+                        setSession({ ...found.data(), id: found.id }); 
+                        setView('garage'); 
+                    } else {
+                        setLoginError('Credenziali errate');
+                    }
+                } catch { setLoginError('Errore connessione'); }
             };
 
             const sendEmail = async () => {
@@ -250,7 +275,7 @@
                 setTimeout(() => setUpdateStatus(''), 2000);
             };
 
-            const visibleBikes = useMemo(() => session?.role === 'admin' ? bikes : bikes.filter(b => String(b.userEmail) === String(session?.email)), [bikes, session]);
+            const visibleBikes = useMemo(() => session?.role === 'admin' ? bikes : bikes.filter(b => String(b.userEmail).toLowerCase() === String(session?.email).toLowerCase()), [bikes, session]);
 
             if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse">Garage Loading...</div>;
 
@@ -286,7 +311,12 @@
                                         <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active"><Icon name="Plus" size={24}/></button>
                                     </div>
                                     <div className="grid gap-4">
-                                        {visibleBikes.map(b => (
+                                        {visibleBikes.length === 0 ? (
+                                            <div className="py-20 text-center text-slate-300 italic flex flex-col items-center gap-4">
+                                                <Icon name="Bike" size={60} className="opacity-10" />
+                                                <p>Nessun veicolo registrato.</p>
+                                            </div>
+                                        ) : visibleBikes.map(b => (
                                             <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group text-left">
                                                 <div className="text-left">
                                                     <h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3>
@@ -304,7 +334,7 @@
                             {view === 'dashboard' && activeBike && (
                                 <div className="space-y-6 animate-in">
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left">
-                                        <div className="relative z-10">
+                                        <div className="relative z-10 text-left">
                                             <h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2>
                                             <p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p>
                                         </div>
@@ -349,18 +379,16 @@
                                 </div>
                             )}
 
-                            {/* ADMIN PANEL AGGIORNATO */}
+                            {/* ADMIN PANEL */}
                             {view === 'admin' && session?.role === 'admin' && (
                                 <div className="space-y-8 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
                                     
-                                    {/* CREAZIONE NUOVO UTENTE CON RUOLO */}
-                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left">
+                                    <div className="bg-slate-900 text-white p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left border border-slate-800">
                                         <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2"><Icon name="UserPlus" size={18}/> Nuovo Profilo</h3>
                                         <input placeholder="Email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
                                         <input placeholder="Password" type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
                                         
-                                        {/* SELETTORE RUOLO */}
                                         <div className="space-y-1">
                                             <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Ruolo Accesso</label>
                                             <select className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" 
@@ -372,8 +400,8 @@
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-2 text-left">
-                                            <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
-                                            <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
+                                            <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
+                                            <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
                                         </div>
                                         <button onClick={async () => { 
                                             await db.collection(`artifacts/${appId}/public/data/users`).add({ ...newUser, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); 
@@ -382,7 +410,6 @@
                                         }} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">Registra Utente</button>
                                     </div>
 
-                                    {/* LISTA UTENTI CON VISUALIZZAZIONE RUOLO */}
                                     <div className="space-y-3 text-left">
                                         <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Lista Utenti</h3>
                                         {allUsers.map(u => (
