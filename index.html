@@ -306,7 +306,7 @@
                                         <div className="relative z-10">
                                             <div className="flex justify-between items-start">
                                                 <h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2>
-                                                <button onClick={() => { setEditingBike(activeBike); setView('editBike'); }} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors btn-active">
+                                                <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors btn-active">
                                                     <Icon name="Edit" size={18} className="text-white" />
                                                 </button>
                                             </div>
@@ -315,8 +315,13 @@
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
 
+                                    {/* MANUTENZIONE CHILOMETRICA */}
                                     {(() => {
-                                        const oV = Number(activeBike.odometer) || 0; const lV = Number(activeBike.lastServiceKm) || 0; const iV = Number(activeBike.serviceIntervalKm) || 12000; const dV = oV - lV; const iD = dV >= (iV - 1000);
+                                        const oV = Number(activeBike.odometer) || 0; 
+                                        const lV = Number(activeBike.lastServiceKm) || 0; 
+                                        const iV = Number(activeBike.serviceIntervalKm) || 12000; 
+                                        const dV = oV - lV; 
+                                        const iD = dV >= (iV - 1000);
                                         return (
                                             <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'}`}>
                                                 <div className="flex items-center gap-2 mb-4">
@@ -333,11 +338,18 @@
                                         );
                                     })()}
 
+                                    {/* SEZIONE SCADENZE - EDITABILI */}
                                     <div className="p-7 rounded-[2.5rem] border-2 border-slate-100 bg-white shadow-sm space-y-5">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Icon name="FileText" className="text-blue-500" size={24} />
-                                            <span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Scadenze Documenti</span>
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <Icon name="FileText" className="text-blue-500" size={24} />
+                                                <span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Scadenze Documenti</span>
+                                            </div>
+                                            <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-orange-500 transition-colors btn-active">
+                                                <Icon name="Edit" size={14} />
+                                            </button>
                                         </div>
+
                                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                             <div className="flex items-center gap-3">
                                                 <Icon name="CreditCard" className="text-slate-400" size={20} />
@@ -351,6 +363,7 @@
                                                 return <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${diff < 0 ? 'bg-red-100 text-red-600' : diff < 30 ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>{diff < 0 ? 'Scaduto' : diff < 30 ? 'In Scadenza' : 'In Regola'}</span>
                                             })()}
                                         </div>
+
                                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                             <div className="flex items-center gap-3">
                                                 <Icon name="ShieldCheck" className="text-slate-400" size={20} />
@@ -367,12 +380,19 @@
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active"><Icon name="History" className="text-slate-400" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Registro</span></button>
-                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active"><Icon name="Plus" className="text-orange-500" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Intervento</span></button>
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform">
+                                            <Icon name="History" className="text-slate-400" size={32} />
+                                            <span className="font-black uppercase text-xs tracking-tighter">Registro</span>
+                                        </button>
+                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform">
+                                            <Icon name="Plus" className="text-orange-500" size={32} />
+                                            <span className="font-black uppercase text-xs tracking-tighter">Intervento</span>
+                                        </button>
                                     </div>
                                 </div>
                             )}
 
+                            {/* AGGIUNGI VEICOLO */}
                             {view === 'addBike' && (
                                 <div className="space-y-6 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Nuovo Veicolo</h2>
@@ -386,38 +406,60 @@
                                     }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100">
                                         <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none transition-all" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Es. Honda Africa Twin" /></div>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Km</label><input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Tagl.</label><input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Km</label><input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Tagl.</label><input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} /></div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Scad. Bollo</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.bolloDeadline} onChange={e => setNewBike({...newBike, bolloDeadline: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Scad. Assic.</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.assicurazioneDeadline} onChange={e => setNewBike({...newBike, assicurazioneDeadline: e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-1"><Icon name="CreditCard" size={10}/> Scad. Bollo</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.bolloDeadline} onChange={e => setNewBike({...newBike, bolloDeadline: e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-1"><Icon name="ShieldCheck" size={10}/> Scad. Assic.</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.assicurazioneDeadline} onChange={e => setNewBike({...newBike, assicurazioneDeadline: e.target.value})} /></div>
                                         </div>
                                         <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva nel Garage</button>
                                     </form>
                                 </div>
                             )}
 
+                            {/* MODIFICA VEICOLO - LOGICA FIXATA */}
                             {view === 'editBike' && editingBike && (
                                 <div className="space-y-6 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Modifica Dati</h2>
                                     <form onSubmit={async (e) => {
                                         e.preventDefault();
-                                        await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).update({ model: editingBike.model, odometer: Number(editingBike.odometer), bolloDeadline: editingBike.bolloDeadline, assicurazioneDeadline: editingBike.assicurazioneDeadline });
-                                        setEditingBike(null); setView('dashboard');
+                                        await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).update({ 
+                                            model: editingBike.model, 
+                                            odometer: Number(editingBike.odometer), 
+                                            bolloDeadline: editingBike.bolloDeadline || '', 
+                                            assicurazioneDeadline: editingBike.assicurazioneDeadline || '' 
+                                        });
+                                        setEditingBike(null); 
+                                        setView('dashboard');
                                     }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100 shadow-sm">
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white outline-none" value={editingBike.model} onChange={e => setEditingBike({...editingBike, model: e.target.value})} /></div>
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Chilometri Attuali</label><input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white outline-none" value={editingBike.odometer} onChange={e => setEditingBike({...editingBike, odometer: e.target.value})} /></div>
-                                        <div className="grid grid-cols-2 gap-3 pt-2">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Scad. Bollo</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={editingBike.bolloDeadline || ''} onChange={e => setEditingBike({...editingBike, bolloDeadline: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Scad. Assic.</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={editingBike.assicurazioneDeadline || ''} onChange={e => setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} /></div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Modello Veicolo</label>
+                                            <input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={editingBike.model} onChange={e => setEditingBike({...editingBike, model: e.target.value})} />
                                         </div>
-                                        <button className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Aggiorna Dati</button>
-                                        <button type="button" onClick={() => setView('dashboard')} className="w-full text-slate-400 font-bold uppercase text-xs pt-2">Annulla</button>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Chilometri Attuali</label>
+                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={editingBike.odometer} onChange={e => setEditingBike({...editingBike, odometer: e.target.value})} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 pt-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Scad. Bollo</label>
+                                                <input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={editingBike.bolloDeadline || ''} onChange={e => setEditingBike({...editingBike, bolloDeadline: e.target.value})} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Scad. Assic.</label>
+                                                <input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={editingBike.assicurazioneDeadline || ''} onChange={e => setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} />
+                                            </div>
+                                        </div>
+                                        <div className="pt-4 space-y-3">
+                                            <button type="submit" className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase shadow-lg btn-active">Salva Modifiche</button>
+                                            <button type="button" onClick={() => setView('dashboard')} className="w-full text-slate-400 font-bold uppercase text-xs pt-2 text-center">Annulla</button>
+                                        </div>
                                     </form>
                                 </div>
                             )}
 
+                            {/* ADMIN PANEL */}
                             {view === 'admin' && (session?.role === 'admin' || session?.email === ADMIN_EMAIL) && (
                                 <div className="space-y-8 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
@@ -433,7 +475,13 @@
                                         <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Lista Utenti</h3>
                                         {allUsers.map(u => (
                                             <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm">
-                                                <div className="flex flex-col gap-1"><p className="font-black text-sm text-slate-800 leading-none">{String(u.email)}</p><div className="flex items-center gap-2 mt-1"><span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>{u.role === 'admin' ? 'Amministratore' : 'Utente'}</span><span className="text-[9px] text-slate-400 font-bold uppercase">ID: {u.templateStandardId || 'Std'}</span></div></div>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="font-black text-sm text-slate-800 leading-none">{String(u.email)}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>{u.role === 'admin' ? 'Amministratore' : 'Utente'}</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase">ID: {u.templateStandardId || 'Std'}</span>
+                                                    </div>
+                                                </div>
                                                 <button onClick={() => { if(confirm('Eliminare?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={20}/></button>
                                             </div>
                                         ))}
@@ -441,26 +489,39 @@
                                 </div>
                             )}
 
+                            {/* HISTORY */}
                             {view === 'history' && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <div className="flex justify-between items-center"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-200"><p className="text-[8px] font-black uppercase leading-none opacity-60">Totale Speso</p><p className="text-lg font-black leading-none pt-1">€ {totalCost.toLocaleString()}</p></div></div>
-                                    <div className="space-y-4">{logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic">Nessun log trovato.</div> : logs.map(l => (
-                                        <div key={l.id} className="bg-slate-50 p-6 rounded-[2rem] border-2 border-white shadow-sm flex justify-between items-start"><div className="text-left"><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div><div className="text-right"><p className="font-black text-slate-900">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic">€{l.cost}</p></div></div>
-                                    ))}</div>
+                                    <div className="flex justify-between items-center"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-200 text-right"><p className="text-[8px] font-black uppercase leading-none opacity-60">Totale Speso</p><p className="text-lg font-black leading-none pt-1">€ {totalCost.toLocaleString()}</p></div></div>
+                                    <div className="space-y-4">
+                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic">Nessun log trovato.</div> : logs.map(l => (
+                                            <div key={l.id} className="bg-slate-50 p-6 rounded-[2rem] border-2 border-white shadow-sm flex justify-between items-start">
+                                                <div className="text-left"><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div>
+                                                <div className="text-right text-left"><p className="font-black text-slate-900">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic">€{l.cost}</p></div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
+                            {/* REGISTRA LAVORO */}
                             {view === 'addLog' && (
                                 <div className="space-y-6 animate-in text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Registra Lavoro</h2>
                                     <form onSubmit={async (e) => {
-                                        e.preventDefault(); const kv = Number(newLog.km) || 0; const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                                        e.preventDefault();
+                                        const kv = Number(newLog.km) || 0;
+                                        const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
                                         await db.collection(`${path}/logs`).add({ ...newLog, km: kv, cost: Number(newLog.cost) || 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                                         if (kv > (Number(activeBike?.odometer) || 0)) await db.doc(path).update({ odometer: kv });
-                                        setView('dashboard'); setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
+                                        setView('dashboard');
+                                        setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
                                     }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left">
-                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione" />
-                                        <div className="grid grid-cols-2 gap-3 text-left"><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" /><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" /></div>
+                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione (Es. Cambio Olio)" />
+                                        <div className="grid grid-cols-2 gap-3 text-left">
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" />
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" />
+                                        </div>
                                         <input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newLog.date} onChange={e => setNewLog({...newLog, date: e.target.value})} />
                                         <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active transition-all">Registra</button>
                                     </form>
