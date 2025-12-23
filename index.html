@@ -182,12 +182,9 @@
 
             const [editingBike, setEditingBike] = useState(null);
             const [newLog, setNewLog] = useState({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
-            
-            // Stati per la gestione utenti Admin
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
             const [editingUser, setEditingUser] = useState(null);
 
-            // Forza il reset dei campi login ogni volta che si cambia vista verso 'login'
             useEffect(() => {
                 if (view === 'login') {
                     setLoginForm({ email: '', password: '' });
@@ -275,10 +272,8 @@
                     if (editingUser) {
                         await db.doc(`${bPath}/${editingUser.id}`).update(newUser);
                         setEditingUser(null);
-                        alert("Profilo aggiornato!");
                     } else {
                         await db.collection(bPath).add({ ...newUser, createdAt: new Date().toISOString() });
-                        alert("Profilo creato!");
                     }
                     setNewUser({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
                 } catch (err) { alert("Errore nel salvataggio"); }
@@ -286,21 +281,10 @@
 
             const startEditUser = (u) => {
                 setEditingUser(u);
-                setNewUser({ 
-                    email: u.email, 
-                    password: u.password, 
-                    role: u.role || 'user', 
-                    templateStandardId: u.templateStandardId || '', 
-                    templateUrgentId: u.templateUrgentId || '' 
-                });
+                setNewUser({ email: u.email, password: u.password, role: u.role || 'user', templateStandardId: u.templateStandardId || '', templateUrgentId: u.templateUrgentId || '' });
             };
 
-            const cancelEditUser = () => {
-                setEditingUser(null);
-                setNewUser({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
-            };
-
-            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse text-left">Caricamento Garage...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold uppercase tracking-widest animate-pulse">Caricamento Garage...</div>;
 
             return (
                 <div className="min-h-screen bg-slate-100 text-slate-900 font-sans hide-scrollbar text-left">
@@ -312,36 +296,36 @@
                             {/* LOGIN */}
                             {view === 'login' && (
                                 <div className="py-10 space-y-8 animate-in text-center text-left">
-                                    <div className="space-y-4 text-left">
-                                        <div className="mx-auto w-fit text-center flex justify-center text-left text-left"><AppLogo size={130} /></div>
-                                        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center text-left">Garage Fleet</h2>
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center text-left">Snoopy Maintenance</p>
+                                    <div className="space-y-4">
+                                        <div className="mx-auto w-fit text-center flex justify-center"><AppLogo size={130} /></div>
+                                        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center">Garage Fleet</h2>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center">Snoopy Maintenance</p>
                                     </div>
                                     <form onSubmit={handleLogin} className="space-y-4 text-left" autoComplete="off">
-                                        <input required type="email" placeholder="Email" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} autoComplete="off" />
-                                        <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all text-left" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} autoComplete="off" />
-                                        {loginError && <p className="text-red-500 text-xs font-black text-center text-left">{loginError}</p>}
-                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl hover:bg-black btn-active text-left">Entra</button>
+                                        <input required type="email" placeholder="Email" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} autoComplete="off" />
+                                        <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} autoComplete="off" />
+                                        {loginError && <p className="text-red-500 text-xs font-black text-center">{loginError}</p>}
+                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl hover:bg-black btn-active">Entra</button>
                                     </form>
                                 </div>
                             )}
 
                             {/* GARAGE */}
                             {view === 'garage' && (
-                                <div className="space-y-6 animate-in text-left">
-                                    <div className="flex justify-between items-end text-left text-left">
-                                        <div className="text-left text-left text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900 text-left">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2 text-left">{session?.role === 'admin' ? 'Gestione Flotta' : 'I tuoi mezzi'}</p></div>
-                                        <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active text-left"><Icon name="Plus" size={24}/></button>
+                                <div className="space-y-6 animate-in">
+                                    <div className="flex justify-between items-end">
+                                        <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">{session?.role === 'admin' ? 'Gestione Flotta' : 'I tuoi mezzi'}</p></div>
+                                        <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active"><Icon name="Plus" size={24}/></button>
                                     </div>
-                                    <div className="grid gap-4 text-left">
+                                    <div className="grid gap-4">
                                         {visibleBikes.map(b => (
-                                            <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group text-left text-left text-left">
-                                                <div className="text-left text-left">
-                                                    <h3 className="font-black uppercase italic text-xl text-slate-800 text-left">{String(b.model)}</h3>
-                                                    <p className="text-slate-400 font-bold text-xs uppercase text-left">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>
-                                                    {(session?.role === 'admin' || session?.email === ADMIN_EMAIL) && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block text-left">{String(b.userEmail)}</p>}
+                                            <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group">
+                                                <div className="text-left">
+                                                    <h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3>
+                                                    <p className="text-slate-400 font-bold text-xs uppercase">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>
+                                                    {(session?.role === 'admin' || session?.email === ADMIN_EMAIL) && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block">{String(b.userEmail)}</p>}
                                                 </div>
-                                                <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors text-left" />
+                                                <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors" />
                                             </div>
                                         ))}
                                     </div>
@@ -350,18 +334,18 @@
 
                             {/* DASHBOARD */}
                             {view === 'dashboard' && activeBike && (
-                                <div className="space-y-6 animate-in text-left">
+                                <div className="space-y-6 animate-in">
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left text-left">
-                                        <div className="relative z-10 text-left text-left">
-                                            <div className="flex justify-between items-start text-left text-left text-left text-left">
-                                                <h2 className="text-2xl font-black italic uppercase text-orange-500 text-left text-left">{String(activeBike.model)}</h2>
-                                                <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors btn-active text-left">
-                                                    <Icon name="Edit" size={18} className="text-white text-left" />
+                                        <div className="relative z-10">
+                                            <div className="flex justify-between items-start">
+                                                <h2 className="text-2xl font-black italic uppercase text-orange-500">{String(activeBike.model)}</h2>
+                                                <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors btn-active">
+                                                    <Icon name="Edit" size={18} className="text-white" />
                                                 </button>
                                             </div>
-                                            <p className="text-5xl font-black mt-3 text-left">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase text-left">km</span></p>
+                                            <p className="text-5xl font-black mt-3">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase">km</span></p>
                                         </div>
-                                        <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10 text-left" />
+                                        <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
 
                                     {(() => {
@@ -371,38 +355,37 @@
                                         const dV = oV - lV; 
                                         const iD = dV >= (iV - 1000);
                                         return (
-                                            <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'} text-left text-left`}>
-                                                <div className="flex items-center gap-2 mb-4 text-left text-left">
+                                            <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'}`}>
+                                                <div className="flex items-center gap-2 mb-4">
                                                     <Icon name="Gauge" className={iD ? 'text-red-500' : 'text-orange-500'} size={24} />
-                                                    <span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500 text-left text-left text-left">Stato Tagliando</span>
+                                                    <span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Stato Tagliando</span>
                                                 </div>
-                                                <div className="space-y-2 text-left text-left">
-                                                    <div className="flex justify-between font-black text-xs uppercase italic text-left text-left text-left text-left"><span>{dV.toLocaleString()} km fatti</span><span>Limite {iV.toLocaleString()}</span></div>
-                                                    <div className="h-3 bg-slate-200 rounded-full overflow-hidden border border-slate-300 text-left text-left">
-                                                        <div className={`h-full transition-all duration-1000 ${iD ? 'bg-red-500' : 'bg-orange-500'} text-left`} style={{ width: `${Math.min(100, (dV/iV)*100)}%` }} />
+                                                <div className="space-y-2 text-left">
+                                                    <div className="flex justify-between font-black text-xs uppercase italic"><span>{dV.toLocaleString()} km fatti</span><span>Limite {iV.toLocaleString()}</span></div>
+                                                    <div className="h-3 bg-slate-200 rounded-full overflow-hidden border border-slate-300">
+                                                        <div className={`h-full transition-all duration-1000 ${iD ? 'bg-red-500' : 'bg-orange-500'}`} style={{ width: `${Math.min(100, (dV/iV)*100)}%` }} />
                                                     </div>
                                                 </div>
                                             </div>
                                         );
                                     })()}
 
-                                    <div className="p-7 rounded-[2.5rem] border-2 border-slate-100 bg-white shadow-sm space-y-5 text-left text-left text-left">
-                                        <div className="flex items-center justify-between gap-2 mb-1 text-left">
-                                            <div className="flex items-center gap-2 text-left">
+                                    <div className="p-7 rounded-[2.5rem] border-2 border-slate-100 bg-white shadow-sm space-y-5">
+                                        <div className="flex items-center justify-between gap-2 mb-1">
+                                            <div className="flex items-center gap-2">
                                                 <Icon name="FileText" className="text-blue-500" size={24} />
-                                                <span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500 text-left text-left">Scadenze Documenti</span>
+                                                <span className="font-black uppercase text-[11px] tracking-[0.2em] text-slate-500">Scadenze Documenti</span>
                                             </div>
-                                            <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-orange-500 transition-colors btn-active text-left text-left">
+                                            <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-orange-500 transition-colors btn-active">
                                                 <Icon name="Edit" size={14} />
                                             </button>
                                         </div>
-
-                                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 text-left text-left">
-                                            <div className="flex items-center gap-3 text-left">
+                                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 text-left">
+                                            <div className="flex items-center gap-3">
                                                 <Icon name="CreditCard" className="text-slate-400" size={20} />
-                                                <div className="text-left text-left">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase leading-none text-left">Scadenza Bollo</p>
-                                                    <p className="font-black text-slate-800 pt-1 text-left">{activeBike.bolloDeadline ? new Date(activeBike.bolloDeadline).toLocaleDateString('it-IT') : 'Mancante'}</p>
+                                                <div className="text-left">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Scadenza Bollo</p>
+                                                    <p className="font-black text-slate-800 pt-1">{activeBike.bolloDeadline ? new Date(activeBike.bolloDeadline).toLocaleDateString('it-IT') : 'Mancante'}</p>
                                                 </div>
                                             </div>
                                             {activeBike.bolloDeadline && (() => {
@@ -410,13 +393,12 @@
                                                 return <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${diff < 0 ? 'bg-red-100 text-red-600' : diff < 30 ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>{diff < 0 ? 'Scaduto' : diff < 30 ? 'In Scadenza' : 'In Regola'}</span>
                                             })()}
                                         </div>
-
-                                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 text-left text-left">
-                                            <div className="flex items-center gap-3 text-left">
+                                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 text-left">
+                                            <div className="flex items-center gap-3">
                                                 <Icon name="ShieldCheck" className="text-slate-400" size={20} />
                                                 <div className="text-left text-left">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase leading-none text-left">Assicurazione</p>
-                                                    <p className="font-black text-slate-800 pt-1 text-left">{activeBike.assicurazioneDeadline ? new Date(activeBike.assicurazioneDeadline).toLocaleDateString('it-IT') : 'Mancante'}</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase leading-none">Assicurazione</p>
+                                                    <p className="font-black text-slate-800 pt-1">{activeBike.assicurazioneDeadline ? new Date(activeBike.assicurazioneDeadline).toLocaleDateString('it-IT') : 'Mancante'}</p>
                                                 </div>
                                             </div>
                                             {activeBike.assicurazioneDeadline && (() => {
@@ -426,96 +408,167 @@
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 text-left text-left">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left text-left">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left">
                                             <Icon name="History" className="text-slate-400" size={32} />
-                                            <span className="font-black uppercase text-xs tracking-tighter text-left">Registro</span>
+                                            <span className="font-black uppercase text-xs tracking-tighter">Registro</span>
                                         </button>
                                         <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left text-left">
                                             <Icon name="Plus" className="text-orange-500" size={32} />
-                                            <span className="font-black uppercase text-xs tracking-tighter text-left">Intervento</span>
+                                            <span className="font-black uppercase text-xs tracking-tighter">Intervento</span>
                                         </button>
                                     </div>
                                 </div>
                             )}
 
-                            {/* ADMIN PANEL - GESTIONE UTENTI COMPLETA */}
+                            {/* AGGIUNGI VEICOLO */}
+                            {view === 'addBike' && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Nuovo Veicolo</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const lastDate = new Date(newBike.lastServiceDate);
+                                        const nextDate = new Date(lastDate.setFullYear(lastDate.getFullYear() + 1)).toISOString().split('T')[0];
+                                        await db.collection(`artifacts/${appId}/public/data/bikes`).add({ ...newBike, userId: currentUser.uid, userEmail: String(session?.email || ""), odometer: Number(newBike.odometer) || 0, lastServiceKm: Number(newBike.lastServiceKm) || 0, serviceIntervalKm: Number(newBike.serviceIntervalKm) || 12000, nextServiceDeadlineDate: nextDate, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                        setNewBike({ model: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000', bolloDeadline: '', assicurazioneDeadline: '' });
+                                        setView('garage');
+                                    }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100 text-left">
+                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none transition-all" value={newBike.model} onChange={e => setNewBike({...newBike, model: e.target.value})} placeholder="Es. Honda Africa Twin" /></div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Km</label><input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={newBike.odometer} onChange={e => setNewBike({...newBike, odometer: e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Tagl.</label><input required type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={newBike.lastServiceDate} onChange={e => setNewBike({...newBike, lastServiceDate: e.target.value})} /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 pt-2">
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-1"><Icon name="CreditCard" size={10}/> Scad. Bollo</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.bolloDeadline} onChange={e => setNewBike({...newBike, bolloDeadline: e.target.value})} /></div>
+                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 flex items-center gap-1"><Icon name="ShieldCheck" size={10}/> Scad. Assic.</label><input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white" value={newBike.assicurazioneDeadline} onChange={e => setNewBike({...newBike, assicurazioneDeadline: e.target.value})} /></div>
+                                        </div>
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active">Salva nel Garage</button>
+                                    </form>
+                                </div>
+                            )}
+
+                            {/* MODIFICA VEICOLO */}
+                            {view === 'editBike' && editingBike && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Modifica Mezzo</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).update({ 
+                                            model: editingBike.model, 
+                                            odometer: Number(editingBike.odometer), 
+                                            bolloDeadline: editingBike.bolloDeadline || '', 
+                                            assicurazioneDeadline: editingBike.assicurazioneDeadline || '',
+                                            lastServiceDate: editingBike.lastServiceDate || '',
+                                            lastServiceKm: Number(editingBike.lastServiceKm) || 0,
+                                            serviceIntervalKm: Number(editingBike.serviceIntervalKm) || 12000
+                                        });
+                                        setEditingBike(null); setView('dashboard');
+                                    }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100 shadow-sm text-left">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Modello Veicolo</label>
+                                            <input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={editingBike.model} onChange={e => setEditingBike({...editingBike, model: e.target.value})} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Chilometri Totali Attuali</label>
+                                            <input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none text-slate-900" value={editingBike.odometer} onChange={e => setEditingBike({...editingBike, odometer: e.target.value})} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 pt-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Bollo</label>
+                                                <input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={editingBike.bolloDeadline || ''} onChange={e => setEditingBike({...editingBike, bolloDeadline: e.target.value})} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Assic.</label>
+                                                <input type="date" className="w-full p-4 rounded-2xl font-bold text-xs border-2 border-white text-slate-900" value={editingBike.assicurazioneDeadline || ''} onChange={e => setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} />
+                                            </div>
+                                        </div>
+                                        <div className="p-4 bg-white/50 rounded-3xl border border-slate-100 space-y-3 mt-2 text-left">
+                                            <p className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1"><Icon name="Tool" size={12}/> Parametri Tagliando</p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1 text-left">
+                                                    <label className="text-[8px] font-black uppercase text-slate-400 ml-1">Data Ultimo</label>
+                                                    <input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] border border-slate-100 text-left" value={editingBike.lastServiceDate || ''} onChange={e => setEditingBike({...editingBike, lastServiceDate: e.target.value})} />
+                                                </div>
+                                                <div className="space-y-1 text-left">
+                                                    <label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Km Ultimo</label>
+                                                    <input type="number" className="w-full p-3 rounded-xl font-bold text-[10px] border border-slate-100 text-left" value={editingBike.lastServiceKm || ''} onChange={e => setEditingBike({...editingBike, lastServiceKm: e.target.value})} />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1 text-left">
+                                                <label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Intervallo (KM)</label>
+                                                <input type="number" className="w-full p-3 rounded-xl font-bold text-[10px] border border-slate-100 text-left" value={editingBike.serviceIntervalKm || ''} onChange={e => setEditingBike({...editingBike, serviceIntervalKm: e.target.value})} placeholder="Es. 12000" />
+                                            </div>
+                                        </div>
+                                        <div className="pt-4 space-y-3">
+                                            <button type="submit" className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase shadow-lg btn-active">Salva Modifiche</button>
+                                            <button type="button" onClick={() => setView('dashboard')} className="w-full text-slate-400 font-bold uppercase text-xs pt-2 text-center">Annulla</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
+
+                            {/* ADMIN PANEL */}
                             {view === 'admin' && (session?.role === 'admin' || session?.email === ADMIN_EMAIL) && (
-                                <div className="space-y-8 animate-in text-left text-left text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Admin Panel</h2>
-                                    
-                                    {/* MODULO CREAZIONE / MODIFICA */}
+                                <div className="space-y-8 animate-in text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
                                     <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left">
-                                            <Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> 
-                                            {editingUser ? `Modifica: ${editingUser.email}` : "Nuovo Profilo"}
-                                        </h3>
-                                        
-                                        <div className="space-y-1 text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Email Account</label>
-                                            <input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
-                                        </div>
-                                        
-                                        <div className="space-y-1 text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Password</label>
-                                            <input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
-                                        </div>
-                                        
-                                        <div className="space-y-1 text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Ruolo Accesso</label>
-                                            <select className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}>
-                                                <option value="user">Utente Standard (Cliente)</option>
-                                                <option value="admin">Amministratore (Admin)</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2 text-left">
-                                            <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
-                                            <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
-                                        </div>
-                                        
-                                        <div className="flex gap-2 text-left">
-                                            <button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">
-                                                {editingUser ? "Salva Modifiche" : "Registra Utente"}
-                                            </button>
-                                            {editingUser && (
-                                                <button onClick={cancelEditUser} className="bg-slate-700 text-white p-4 rounded-xl font-black uppercase btn-active">
-                                                    Annulla
-                                                </button>
-                                            )}
-                                        </div>
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2"><Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> {editingUser ? `Modifica: ${editingUser.email}` : "Nuovo Profilo"}</h3>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Email Account</label><input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Password</label><input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Ruolo Accesso</label><select className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}><option value="user">Utente Standard (Cliente)</option><option value="admin">Amministratore (Admin)</option></select></div>
+                                        <div className="grid grid-cols-2 gap-2 text-left"><input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700 text-left" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} /><input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700 text-left" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} /></div>
+                                        <div className="flex gap-2 text-left"><button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active">{editingUser ? "Salva Modifiche" : "Registra Utente"}</button>{editingUser && <button onClick={() => { setEditingUser(null); setNewUser({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' }); }} className="bg-slate-700 text-white p-4 rounded-xl font-black uppercase btn-active">Annulla</button>}</div>
                                     </div>
-
-                                    {/* LISTA UTENTI CON AZIONI */}
-                                    <div className="space-y-3 text-left">
-                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left">Lista Utenti Registrati</h3>
+                                    <div className="space-y-3">
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left">Lista Utenti</h3>
                                         {allUsers.map(u => (
                                             <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm text-left">
-                                                <div className="flex flex-col gap-1 text-left">
-                                                    <p className="font-black text-sm text-slate-800 leading-none text-left">{String(u.email)}</p>
-                                                    <div className="flex items-center gap-2 mt-1 text-left">
-                                                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
-                                                            {u.role === 'admin' ? 'Amministratore' : 'Utente'}
-                                                        </span>
-                                                        <span className="text-[9px] text-slate-400 font-bold uppercase text-left">Pass: {u.password}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2 text-left">
-                                                    <button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 rounded-lg text-blue-500 btn-active text-left">
-                                                        <Icon name="Edit" size={18}/>
-                                                    </button>
-                                                    <button onClick={() => { if(confirm('Eliminare definitivamente?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active text-left text-left">
-                                                        <Icon name="Trash2" size={18}/>
-                                                    </button>
-                                                </div>
+                                                <div className="flex flex-col gap-1 text-left text-left"><p className="font-black text-sm text-slate-800 leading-none">{String(u.email)}</p><div className="flex items-center gap-2 mt-1"><span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>{u.role === 'admin' ? 'Amministratore' : 'Utente'}</span><span className="text-[9px] text-slate-400 font-bold uppercase text-left">Pass: {u.password}</span></div></div>
+                                                <div className="flex gap-2 text-left"><button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 rounded-lg text-blue-500 btn-active"><Icon name="Edit" size={18}/></button><button onClick={() => { if(confirm('Eliminare?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 rounded-lg text-red-500 btn-active"><Icon name="Trash2" size={18}/></button></div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* AGGIUNGI / MODIFICA VEICOLO / CRONOLOGIA / LOG ... (RESTA INVARIATO) */}
-                            {/* ... Resto dei componenti come addBike, editBike, history, addLog ... */}
+                            {/* HISTORY */}
+                            {view === 'history' && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <div className="flex justify-between items-center"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-200 text-right"><p className="text-[8px] font-black uppercase leading-none opacity-60">Totale Speso</p><p className="text-lg font-black leading-none pt-1">€ {totalCost.toLocaleString()}</p></div></div>
+                                    <div className="space-y-4">
+                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic">Nessun log trovato.</div> : logs.map(l => (
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[2rem] shadow-sm flex justify-between items-start text-left">
+                                                <div className="text-left text-left text-left text-left text-left"><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div>
+                                                <div className="text-right text-left text-left text-left text-left text-left text-left text-left text-left"><p className="font-black text-slate-900 text-left">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-left">€{l.cost}</p></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ADD LOG */}
+                            {view === 'addLog' && (
+                                <div className="space-y-6 animate-in text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left text-slate-900">Registra Lavoro</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const kv = Number(newLog.km) || 0;
+                                        const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                                        await db.collection(`${path}/logs`).add({ ...newLog, km: kv, cost: Number(newLog.cost) || 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                        if (kv > (Number(activeBike?.odometer) || 0)) await db.doc(path).update({ odometer: kv });
+                                        setView('dashboard');
+                                        setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
+                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left">
+                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione (Es. Cambio Olio)" />
+                                        <div className="grid grid-cols-2 gap-3 text-left">
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" />
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" />
+                                        </div>
+                                        <input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={newLog.date} onChange={e => setNewLog({...newLog, date: e.target.value})} />
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-left">Registra</button>
+                                    </form>
+                                </div>
+                            )}
 
                         </main>
                         <BottomNav view={view} setView={setView} activeBike={activeBike} />
