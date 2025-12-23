@@ -22,22 +22,20 @@
             font-family: 'Inter', sans-serif; 
             margin: 0;
             padding: 0;
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
             -webkit-tap-highlight-color: transparent;
         }
         .animate-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .btn-active:active { transform: scale(0.96); transition: transform 0.1s; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         
-        .toast-slide { animation: toastIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
-        @keyframes toastIn { from { transform: translateY(100%) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-
-        .modal-overlay { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); }
+        .toast-slide { animation: toastIn 0.3s ease-out forwards; }
+        @keyframes toastIn { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -77,17 +75,18 @@
                 Bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></>,
                 UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="16" x2="22" y1="11" y2="11"/></>,
                 Bike: <><circle cx="18.5" cy="17.5" r="2.5"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></>,
-                Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
                 FileText: <><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></>,
-                CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></>,
+                CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
                 ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
                 Edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
                 Search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
-                AlertTriangle: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
                 Eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
                 EyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
-                Tool: <><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></>,
-                TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>
+                CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9" y1="17" x2="15" y2="17"/></>,
+                ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
+                ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
+                Files: <><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"/><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"/><path d="M15 2v5h5"/></>,
+                AlertTriangle: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>
             };
             return (
                 <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -97,11 +96,53 @@
         }
 
         // --- COMPONENTI UI ---
+
         function AppLogo({ size = 100 }) {
             return (
                 <div className="flex items-center justify-center bg-white rounded-full border-2 border-orange-500 shadow-sm" style={{ width: size, height: size }}>
                     <Icon name="Bike" size={size * 0.6} className="text-orange-500" />
                 </div>
+            );
+        }
+
+        function Header({ setView, view, onBack, session, onLogout }) {
+            const [dateTime, setDateTime] = useState(new Date());
+            useEffect(() => {
+                const timer = setInterval(() => setDateTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            const isAdminHeader = session?.role === 'admin' || (session?.email && session.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+
+            return (
+                <header className="bg-slate-900 text-white p-5 flex justify-between items-center shadow-lg shrink-0 relative">
+                    <div className="flex items-center gap-3 z-10 text-left">
+                        {view !== 'garage' && view !== 'login' && (
+                            <button onClick={onBack} className="p-2 bg-slate-800 rounded-xl btn-active transition-transform">
+                                <Icon name="ChevronLeft" size={24} className="text-orange-500" />
+                            </button>
+                        )}
+                        <h1 className="font-black italic uppercase tracking-tighter text-xl leading-none">Garage</h1>
+                    </div>
+
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center">
+                        <span className="text-2xl font-black tracking-widest text-orange-500 leading-none drop-shadow-md">
+                            {dateTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5 opacity-80">
+                            {dateTime.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 z-10">
+                        {isAdminHeader && (
+                            <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600 shadow-lg' : 'bg-slate-800'}`}>
+                                <Icon name="Shield" size={20} />
+                            </button>
+                        )}
+                        {session && <button onClick={onLogout} className="p-2 bg-slate-800 text-red-400 rounded-xl btn-active transition-transform"><Icon name="LogOut" size={20}/></button>}
+                    </div>
+                </header>
             );
         }
 
@@ -116,59 +157,30 @@
             );
         };
 
-        const Modal = ({ title, message, onConfirm, onCancel, confirmText = "Conferma" }) => (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in">
-                <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-                    <div className="text-center space-y-2">
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">{title}</h3>
-                        <p className="text-sm text-slate-500 font-medium">{message}</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <button onClick={onConfirm} className="w-full bg-red-500 text-white p-4 rounded-2xl font-black uppercase text-sm btn-active">{confirmText}</button>
-                        <button onClick={onCancel} className="w-full bg-slate-100 text-slate-500 p-4 rounded-2xl font-black uppercase text-sm btn-active">Annulla</button>
-                    </div>
-                </div>
-            </div>
-        );
-
-        function Header({ setView, view, onBack, session, onLogout }) {
-            const [dateTime, setDateTime] = useState(new Date());
-            useEffect(() => { const t = setInterval(() => setDateTime(new Date()), 1000); return () => clearInterval(t); }, []);
-            const isAdmin = session?.role === 'admin' || (session?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-            return (
-                <header className="bg-slate-900 text-white p-5 flex justify-between items-center shadow-lg shrink-0 relative">
-                    <div className="flex items-center gap-3 z-10">
-                        {!['garage', 'login'].includes(view) && (
-                            <button onClick={onBack} className="p-2 bg-slate-800 rounded-xl btn-active"><Icon name="ChevronLeft" size={24} className="text-orange-500" /></button>
-                        )}
-                        <h1 className="font-black italic uppercase tracking-tighter text-xl">Garage</h1>
-                    </div>
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center">
-                        <span className="text-2xl font-black tracking-widest text-orange-500 leading-none">{dateTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase mt-0.5">{dateTime.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })}</span>
-                    </div>
-                    <div className="flex items-center gap-2 z-10">
-                        {isAdmin && <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600 shadow-lg' : 'bg-slate-800'}`}><Icon name="Shield" size={20} /></button>}
-                        {session && <button onClick={onLogout} className="p-2 bg-slate-800 text-red-400 rounded-xl btn-active"><Icon name="LogOut" size={20}/></button>}
-                    </div>
-                </header>
-            );
-        }
-
         function BottomNav({ view, setView, activeBike }) {
-            const hiddenViews = ['admin', 'addBike', 'editBike', 'login', 'addLog', 'editLog'];
+            const hiddenViews = ['admin', 'addBike', 'editBike', 'login', 'addLog', 'documents'];
             if (!activeBike || hiddenViews.includes(view)) return null;
             return (
                 <nav className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-8 md:p-4 max-w-md mx-auto rounded-t-[2.5rem] shadow-[0_-8px_40px_rgba(0,0,0,0.12)] z-40">
-                    <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-orange-500 scale-110' : 'text-slate-400'}`}><Icon name="Gauge" size={24} /><span className="text-[10px] font-black uppercase">Stato</span></button>
-                    <button onClick={() => setView('history')} className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-orange-500 scale-110' : 'text-slate-400'}`}><Icon name="History" size={24} /><span className="text-[10px] font-black uppercase">Storico</span></button>
+                    <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-orange-500 scale-110' : 'text-slate-400 opacity-60'}`}>
+                        <Icon name="Gauge" size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-tighter">Stato</span>
+                    </button>
+                    <button onClick={() => setView('history')} className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-orange-500 scale-110' : 'text-slate-400 opacity-60'}`}>
+                        <Icon name="History" size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-center">Storico</span>
+                    </button>
                     <div className="relative -top-12">
-                        <button onClick={() => setView('addLog')} className="bg-orange-500 text-white p-5 rounded-full shadow-xl shadow-orange-500/20 border-4 border-white btn-active"><Icon name="Plus" size={32} strokeWidth={3} /></button>
+                        <button onClick={() => setView('addLog')} className="bg-orange-500 text-white p-5 rounded-full shadow-xl shadow-orange-500/20 border-4 border-white btn-active transition-all hover:rotate-90">
+                            <Icon name="Plus" size={32} strokeWidth={3} />
+                        </button>
                     </div>
                     <div className="w-12" />
                 </nav>
             );
         }
+
+        // --- APP LOGIC ---
 
         function App() {
             const [currentUser, setCurrentUser] = useState(null);
@@ -176,7 +188,6 @@
             const [loading, setLoading] = useState(true);
             const [view, setView] = useState('login');
             const [toast, setToast] = useState(null);
-            const [modal, setModal] = useState(null);
             const [searchQuery, setSearchQuery] = useState("");
             
             const [bikes, setBikes] = useState([]);
@@ -186,20 +197,38 @@
             const [allUsers, setAllUsers] = useState([]);
 
             const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-            const [newBike, setNewBike] = useState({ model: '', targa: '', odometer: '', lastServiceDate: new Date().toISOString().split('T')[0], lastServiceKm: '', serviceIntervalKm: '12000', bolloDeadline: '', assicurazioneDeadline: '' });
+            const [loginError, setLoginError] = useState('');
+            
+            const [newBike, setNewBike] = useState({ 
+                model: '', targa: '', odometer: '', 
+                lastServiceDate: new Date().toISOString().split('T')[0], 
+                lastServiceKm: '', serviceIntervalKm: '12000',
+                bolloDeadline: '', assicurazioneDeadline: '', revisioneDeadline: '',
+                bolloNum: '', assicurazioneNum: '', revisioneNum: '',
+                bolloLink: '', assicurazioneLink: '', revisioneLink: ''
+            });
+
             const [editingBike, setEditingBike] = useState(null);
             const [newLog, setNewLog] = useState({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
-            const [editingLog, setEditingLog] = useState(null);
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
             const [editingUser, setEditingUser] = useState(null);
             const [showPassMap, setShowPassMap] = useState({});
+
+            // Definizione isAdmin e totalCost centralizzata
+            const isAdmin = useMemo(() => {
+                return session?.role === 'admin' || (session?.email && session.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+            }, [session]);
+
+            const totalCostValue = useMemo(() => {
+                return logs.reduce((sum, log) => sum + (Number(log.cost) || 0), 0);
+            }, [logs]);
 
             const showToast = (message, type = 'success') => setToast({ message, type });
 
             const handleLogout = useCallback(() => {
                 setSession(null); setSelectedBikeId(null); setActiveBike(null); 
                 setLoginForm({ email: '', password: '' }); setView('login');
-                showToast("Arrivederci!");
+                showToast("Logout effettuato");
             }, []);
 
             useEffect(() => {
@@ -232,6 +261,7 @@
 
             const handleLogin = async (e) => {
                 e.preventDefault();
+                setLoginError('');
                 const emailInput = loginForm.email.toLowerCase().trim();
                 if (emailInput === ADMIN_EMAIL.toLowerCase() && loginForm.password === ADMIN_PASS) {
                     setSession({ email: ADMIN_EMAIL, role: 'admin' }); setView('garage'); return;
@@ -239,128 +269,88 @@
                 try {
                     const snap = await db.collection(`artifacts/${appId}/public/data/users`).get();
                     const found = snap.docs.find(d => d.data().email.toLowerCase() === emailInput && d.data().password === loginForm.password);
-                    if (found) { setSession({ ...found.data(), id: found.id }); setView('garage'); showToast(`Benvenuto!`); }
-                    else showToast("Email o Password errati", "error");
-                } catch { showToast("Errore di rete", "error"); }
+                    if (found) { setSession({ ...found.data(), id: found.id }); setView('garage'); }
+                    else showToast("Credenziali errate", "error");
+                } catch { showToast("Errore database", "error"); }
             };
 
             const getBikeDeadlines = (bike) => {
-                const dls = [];
+                const deadlines = [];
                 const diffKm = (Number(bike.odometer) || 0) - (Number(bike.lastServiceKm) || 0);
-                if (diffKm >= (Number(bike.serviceIntervalKm || 12000) - 1000)) dls.push({ type: 'Tagliando', urgent: diffKm >= Number(bike.serviceIntervalKm) });
-                if (bike.bolloDeadline) {
-                    const diffDays = (new Date(bike.bolloDeadline) - new Date()) / 86400000;
-                    if (diffDays < 30) dls.push({ type: 'Bollo', urgent: diffDays < 0 });
-                }
-                if (bike.assicurazioneDeadline) {
-                    const diffDays = (new Date(bike.assicurazioneDeadline) - new Date()) / 86400000;
-                    if (diffDays < 30) dls.push({ type: 'Assic.', urgent: diffDays < 0 });
-                }
-                return dls;
+                if (diffKm >= (Number(bike.serviceIntervalKm || 12000) - 1000)) deadlines.push({ type: 'Tagliando', urgent: diffKm >= Number(bike.serviceIntervalKm || 12000) });
+                
+                ['bolloDeadline', 'assicurazioneDeadline', 'revisioneDeadline'].forEach(key => {
+                    if (bike[key]) {
+                        const label = key === 'bolloDeadline' ? 'Bollo' : key === 'assicurazioneDeadline' ? 'Assic.' : 'Revisione';
+                        const diffDays = (new Date(bike[key]) - new Date()) / 86400000;
+                        if (diffDays < 30) deadlines.push({ type: label, urgent: diffDays < 0 });
+                    }
+                });
+                return deadlines;
             };
 
-            // Ordinamento Garage: Prima le moto con scadenze urgenti
-            const sortedBikes = useMemo(() => {
-                const isAdmin = session?.role === 'admin' || (session?.email && session.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+            const generateCalendarLink = (type, bikeModel, date) => {
+                const cleanDate = date.replace(/-/g, "");
+                const title = `Scadenza ${type} - ${bikeModel}`;
+                const details = `Ricordati di rinnovare il ${type} per la tua moto ${bikeModel}. Garage Fleet - Snoopy Edition.`;
+                return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${cleanDate}/${cleanDate}&details=${encodeURIComponent(details)}`;
+            };
+
+            const visibleBikes = useMemo(() => {
                 let list = isAdmin ? bikes : bikes.filter(b => String(b.userEmail).toLowerCase() === String(session?.email).toLowerCase());
-                
                 if (searchQuery) {
                     const q = searchQuery.toLowerCase();
                     list = list.filter(b => b.model.toLowerCase().includes(q) || (b.targa || "").toLowerCase().includes(q) || b.userEmail.toLowerCase().includes(q));
                 }
+                return list;
+            }, [bikes, isAdmin, session, searchQuery]);
 
-                return [...list].sort((a, b) => {
-                    const alertsA = getBikeDeadlines(a).some(dl => dl.urgent);
-                    const alertsB = getBikeDeadlines(b).some(dl => dl.urgent);
-                    if (alertsA && !alertsB) return -1;
-                    if (!alertsA && alertsB) return 1;
-                    return a.model.localeCompare(b.model);
-                });
-            }, [bikes, session, searchQuery]);
-
-            const stats = useMemo(() => {
-                const totalCost = bikes.reduce((acc, b) => acc + (Number(b.odometer) ? 1 : 0), 0); // placeholder per logica complessa
-                return {
-                    totalBikes: bikes.length,
-                    totalUsers: allUsers.length,
-                    critical: bikes.filter(b => getBikeDeadlines(b).length > 0).length
-                };
-            }, [bikes, allUsers]);
+            const criticalFleet = useMemo(() => bikes.map(b => ({ ...b, dls: getBikeDeadlines(b) })).filter(b => b.dls.length > 0), [bikes]);
 
             const handleSaveUser = async (e) => {
                 e.preventDefault();
                 const bPath = `artifacts/${appId}/public/data/users`;
                 try {
-                    if (editingUser) {
-                        await db.doc(`${bPath}/${editingUser.id}`).update(newUser);
-                        setEditingUser(null);
-                        showToast("Profilo aggiornato");
-                    } else {
-                        await db.collection(bPath).add({ ...newUser, createdAt: new Date().toISOString() });
-                        showToast("Nuovo utente creato");
-                    }
+                    if (editingUser) { await db.doc(`${bPath}/${editingUser.id}`).update(newUser); setEditingUser(null); }
+                    else { await db.collection(bPath).add({ ...newUser, createdAt: new Date().toISOString() }); }
                     setNewUser({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' });
-                } catch { showToast("Errore salvataggio", "error"); }
+                    showToast("Salvataggio completato");
+                } catch { showToast("Errore nel salvataggio", "error"); }
+            };
+
+            const startEditUser = (u) => {
+                setEditingUser(u);
+                setNewUser({ email: u.email, password: u.password, role: u.role || 'user', templateStandardId: u.templateStandardId || '', templateUrgentId: u.templateUrgentId || '' });
             };
 
             const handleDeleteBike = async (id) => {
-                setModal({
-                    title: "Elimina Veicolo",
-                    message: "L'operazione è definitiva. Tutti i log verranno persi.",
-                    confirmText: "Elimina",
-                    onConfirm: async () => {
-                        await db.doc(`artifacts/${appId}/public/data/bikes/${id}`).delete();
-                        setEditingBike(null); setView('garage'); setModal(null);
-                        showToast("Veicolo rimosso");
-                    }
-                });
+                if (confirm("Sei sicuro di voler eliminare definitivamente questo veicolo?")) {
+                    await db.doc(`artifacts/${appId}/public/data/bikes/${id}`).delete();
+                    setEditingBike(null); setView('garage'); showToast("Veicolo eliminato");
+                }
             };
 
-            const handleSaveLog = async (e) => {
-                e.preventDefault();
-                const kmVal = Number(editingLog ? editingLog.km : newLog.km);
-                const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}/logs`;
-                try {
-                    if (editingLog) {
-                        await db.doc(`${path}/${editingLog.id}`).update(editingLog);
-                        setEditingLog(null);
-                        showToast("Intervento aggiornato");
-                    } else {
-                        await db.collection(path).add({ ...newLog, createdAt: new Date().toISOString() });
-                        showToast("Intervento salvato");
-                    }
-                    if (kmVal > (Number(activeBike?.odometer) || 0)) await db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).update({ odometer: kmVal });
-                    setView('dashboard');
-                    setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' });
-                } catch { showToast("Errore log", "error"); }
-            };
-
-            if (loading) return <div className="h-screen flex items-center justify-center bg-white text-orange-500 font-bold"><Icon name="Bike" size={48} className="animate-bounce" /></div>;
+            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-50 text-orange-500 font-bold animate-pulse uppercase tracking-widest text-center">Caricamento Garage...</div>;
 
             return (
                 <div className="min-h-screen bg-slate-100 text-slate-900 font-sans hide-scrollbar text-left">
-                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col">
+                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left">
                         
                         <Header view={view} setView={setView} onBack={() => setView('garage')} session={session} onLogout={handleLogout} />
 
-                        <main className="flex-1 overflow-y-auto p-5 pb-28 hide-scrollbar">
-                            
+                        <main className="flex-1 overflow-y-auto p-5 pb-10 hide-scrollbar text-left">
                             {/* LOGIN */}
                             {view === 'login' && (
-                                <div className="py-12 space-y-10 animate-in text-center">
+                                <div className="py-10 space-y-8 animate-in text-center text-left text-left">
                                     <div className="space-y-4">
-                                        <div className="mx-auto w-fit flex justify-center"><AppLogo size={140} /></div>
-                                        <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Garage Snoopy</h2>
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em]">Fleet Management v2.0</p>
+                                        <div className="mx-auto w-fit flex justify-center text-center"><AppLogo size={130} /></div>
+                                        <h2 className="text-3xl font-black uppercase italic tracking-tighter text-center">Garage Fleet</h2>
+                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center">Snoopy Maintenance</p>
                                     </div>
-                                    <form onSubmit={handleLogin} className="space-y-4 text-left">
-                                        <div className="bg-slate-50 border-2 border-slate-100 rounded-3xl p-2 focus-within:border-orange-400 transition-all">
-                                            <input required type="email" placeholder="Email" className="w-full bg-transparent p-4 font-bold outline-none" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
-                                        </div>
-                                        <div className="bg-slate-50 border-2 border-slate-100 rounded-3xl p-2 focus-within:border-orange-400 transition-all">
-                                            <input required type="password" placeholder="Password" className="w-full bg-transparent p-4 font-bold outline-none" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
-                                        </div>
-                                        <button className="w-full bg-slate-900 text-white p-6 rounded-[2.5rem] font-black uppercase shadow-xl hover:shadow-orange-500/20 active:scale-95 transition-all text-xl">Entra</button>
+                                    <form onSubmit={handleLogin} className="space-y-4 text-left" autoComplete="off">
+                                        <input required type="email" placeholder="Email" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} autoComplete="off" />
+                                        <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none transition-all" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} autoComplete="off" />
+                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl hover:bg-black btn-active text-center text-left">Entra</button>
                                     </form>
                                 </div>
                             )}
@@ -369,41 +359,31 @@
                             {view === 'garage' && (
                                 <div className="space-y-6 animate-in">
                                     <div className="flex justify-between items-end">
-                                        <div className="text-left">
-                                            <h2 className="text-4xl font-black uppercase italic leading-none text-slate-900 tracking-tighter">Garage</h2>
-                                            <p className="text-slate-400 text-[10px] font-black uppercase mt-2 tracking-widest">{session?.role === 'admin' ? 'Panoramica Totale' : 'I Tuoi Veicoli'}</p>
-                                        </div>
-                                        <button onClick={() => setView('addBike')} className="bg-slate-900 text-white p-4 rounded-2xl shadow-lg active:scale-90 transition-transform"><Icon name="Plus" size={24}/></button>
+                                        <div className="text-left text-left text-left"><h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">I tuoi mezzi</p></div>
+                                        <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active"><Icon name="Plus" size={24}/></button>
                                     </div>
-
-                                    <div className="relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors"><Icon name="Search" size={18} /></div>
-                                        <input className="w-full bg-slate-100 border-2 border-transparent focus:border-orange-200 rounded-3xl p-5 pl-12 font-bold outline-none text-sm transition-all shadow-inner" placeholder="Cerca targa, modello o utente..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="Search" size={18} /></div>
+                                        <input className="w-full bg-slate-100 border-2 border-transparent focus:border-orange-200 rounded-2xl p-4 pl-12 font-bold outline-none text-sm shadow-inner" placeholder="Cerca modello o targa..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                                     </div>
-
-                                    <div className="grid gap-5">
-                                        {sortedBikes.map(b => {
+                                    <div className="grid gap-4">
+                                        {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
-                                            const hasUrgent = dls.some(d => d.urgent);
                                             return (
-                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className={`bg-white border-2 p-6 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer transition-all active:scale-[0.98] ${hasUrgent ? 'border-red-200 bg-red-50/30' : 'border-slate-100 hover:border-orange-200'}`}>
-                                                    <div className="text-left space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <h3 className="font-black uppercase italic text-xl text-slate-800 tracking-tighter">{b.model}</h3>
-                                                            {b.targa && <span className="bg-slate-900 text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest">{b.targa}</span>}
+                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group">
+                                                    <div className="text-left">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h3 className="font-black uppercase italic text-xl text-slate-800">{String(b.model)}</h3>
+                                                            {b.targa && <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase">{b.targa}</span>}
                                                         </div>
-                                                        <div className="flex items-center gap-1.5 text-slate-400 font-bold text-xs uppercase italic">
-                                                            <Icon name="Gauge" size={14} />
-                                                            <span>{(Number(b.odometer)).toLocaleString()} KM</span>
-                                                        </div>
+                                                        <p className="text-slate-400 font-bold text-xs uppercase text-left">{(Number(b.odometer)).toLocaleString()} KM TOTALI</p>
                                                         <div className="flex flex-wrap gap-1 mt-2">
-                                                            {dls.map((d, i) => (
-                                                                <span key={i} className={`text-[8px] font-black px-2 py-1 rounded-full uppercase border ${d.urgent ? 'bg-red-500 border-red-500 text-white' : 'bg-orange-100 border-orange-200 text-orange-600'}`}>{d.type}</span>
-                                                            ))}
-                                                            {dls.length === 0 && <span className="text-[9px] font-black text-emerald-500 uppercase flex items-center gap-1.5 bg-emerald-50 px-2 py-1 rounded-full"><span className="status-dot bg-emerald-500 animate-pulse"></span> In Regola</span>}
+                                                            {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{d.type}</span>)}
+                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="status-dot bg-emerald-500"></span> In Regola</span>}
                                                         </div>
+                                                        {isAdmin && <p className="text-[9px] text-blue-500 font-black mt-2 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-full inline-block text-left">{String(b.userEmail)}</p>}
                                                     </div>
-                                                    <div className={hasUrgent ? 'text-red-500' : 'text-slate-100'}><Icon name="Bike" size={40} /></div>
+                                                    <Icon name="Bike" size={32} className="text-slate-200 group-hover:text-orange-500 transition-colors" />
                                                 </div>
                                             );
                                         })}
@@ -414,106 +394,135 @@
                             {/* DASHBOARD */}
                             {view === 'dashboard' && activeBike && (
                                 <div className="space-y-6 animate-in">
-                                    <div className="bg-slate-900 text-white p-8 rounded-[3.5rem] shadow-2xl relative overflow-hidden text-left border border-slate-800">
-                                        <div className="relative z-10 space-y-1">
+                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left text-left text-left">
+                                        <div className="relative z-10 text-left">
                                             <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h2 className="text-3xl font-black italic uppercase text-orange-500 tracking-tighter leading-none">{activeBike.model}</h2>
-                                                    {activeBike.targa && <p className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase mt-2">Targa: {activeBike.targa}</p>}
-                                                </div>
-                                                <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-3 bg-white/10 rounded-2xl hover:bg-white/20 transition-all active:scale-90"><Icon name="Edit" size={20} className="text-white" /></button>
+                                                <h2 className="text-2xl font-black italic uppercase text-orange-500 text-left">{String(activeBike.model)}</h2>
+                                                <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors btn-active"><Icon name="Edit" size={18} className="text-white" /></button>
                                             </div>
-                                            <p className="text-6xl font-black mt-6 tracking-tighter italic">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 not-italic tracking-normal uppercase">km</span></p>
+                                            <p className="text-5xl font-black mt-3 text-left">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase text-left">km</span></p>
                                         </div>
-                                        <Icon name="Bike" size={250} className="absolute -right-16 -bottom-16 opacity-10 rotate-[-15deg]" />
+                                        <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
 
-                                    {/* PROGRESSO TAGLIANDO */}
+                                    {/* MANUTENZIONE */}
                                     {(() => {
                                         const oV = Number(activeBike.odometer) || 0; 
                                         const lV = Number(activeBike.lastServiceKm) || 0; 
                                         const iV = Number(activeBike.serviceIntervalKm) || 12000; 
-                                        const dV = oV - lV; 
-                                        const pct = Math.min(100, (dV/iV)*100);
-                                        const barColor = pct > 90 ? 'bg-red-500' : pct > 75 ? 'bg-orange-500' : 'bg-emerald-500';
+                                        const dV = oV - lV; const iD = dV >= (iV - 1000);
                                         return (
-                                            <div className={`p-8 rounded-[3rem] border-2 shadow-sm bg-white ${pct > 90 ? 'border-red-100 shadow-red-100' : 'border-slate-100'}`}>
-                                                <div className="flex items-center gap-3 mb-6">
-                                                    <Icon name="Gauge" className={pct > 90 ? 'text-red-500' : 'text-orange-500'} size={28} />
-                                                    <div className="text-left"><span className="font-black uppercase text-[11px] tracking-widest text-slate-400 block leading-none">Manutenzione</span><span className="font-black uppercase text-xs text-slate-900">Stato Tagliando</span></div>
-                                                </div>
-                                                <div className="space-y-3">
-                                                    <div className="flex justify-between font-black text-[10px] uppercase italic text-slate-500"><span>{dV.toLocaleString()} km percorsi</span><span>Limite {iV.toLocaleString()}</span></div>
-                                                    <div className="h-4 bg-slate-100 rounded-full overflow-hidden p-1 border border-slate-200">
-                                                        <div className={`h-full rounded-full transition-all duration-1000 ${barColor}`} style={{ width: `${pct}%` }} />
-                                                    </div>
+                                            <div className={`p-7 rounded-[2.5rem] border-2 shadow-sm ${iD ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'}`}>
+                                                <div className="flex items-center gap-2 mb-4"><Icon name="Gauge" className={iD ? 'text-red-500' : 'text-orange-500'} /><span className="font-black uppercase text-[11px] tracking-widest text-slate-500">Stato Tagliando</span></div>
+                                                <div className="space-y-2 text-left">
+                                                    <div className="flex justify-between font-black text-xs uppercase italic text-left"><span>{dV.toLocaleString()} km fatti</span><span>Limite {iV.toLocaleString()}</span></div>
+                                                    <div className="h-3 bg-slate-200 rounded-full overflow-hidden border border-slate-300"><div className={`h-full transition-all duration-1000 ${iD ? 'bg-red-500' : 'bg-orange-500'}`} style={{ width: `${Math.min(100, (dV/iV)*100)}%` }} /></div>
                                                 </div>
                                             </div>
                                         );
                                     })()}
 
-                                    {/* DOCUMENTI */}
-                                    <div className="p-8 rounded-[3rem] border-2 border-slate-100 bg-white shadow-sm space-y-4">
-                                        <div className="flex items-center gap-3 mb-2 text-left"><Icon name="FileText" className="text-blue-500" /><span className="font-black uppercase text-[11px] tracking-widest text-slate-400">Scadenze Documenti</span></div>
-                                        <div className="flex items-center justify-between p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                            <div className="flex items-center gap-4 text-left"><Icon name="CreditCard" size={24} className="text-slate-400"/><div className="text-left"><p className="text-[10px] font-black text-slate-400 uppercase leading-none">Bollo</p><p className="font-black text-slate-800 pt-1 leading-none">{activeBike.bolloDeadline ? new Date(activeBike.bolloDeadline).toLocaleDateString('it-IT') : 'N.D.'}</p></div></div>
-                                        </div>
-                                        <div className="flex items-center justify-between p-5 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                            <div className="flex items-center gap-4 text-left"><Icon name="ShieldCheck" size={24} className="text-slate-400"/><div className="text-left"><p className="text-[10px] font-black text-slate-400 uppercase leading-none">Assicurazione</p><p className="font-black text-slate-800 pt-1 leading-none">{activeBike.assicurazioneDeadline ? new Date(activeBike.assicurazioneDeadline).toLocaleDateString('it-IT') : 'N.D.'}</p></div></div>
-                                        </div>
-                                    </div>
-
                                     <div className="grid grid-cols-2 gap-4">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[3rem] shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all text-slate-600 hover:border-orange-200"><Icon name="History" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Cronologia</span></button>
-                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-xl flex flex-col items-center gap-3 active:scale-95 transition-all hover:bg-black"><Icon name="Plus" className="text-orange-500" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Intervento</span></button>
+                                        <button onClick={() => setView('documents')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left">
+                                            <Icon name="Files" className="text-blue-500" size={32} />
+                                            <span className="font-black uppercase text-xs tracking-tighter text-left">Archivio Doc.</span>
+                                        </button>
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left text-left">
+                                            <Icon name="History" className="text-slate-400" size={32} />
+                                            <span className="font-black uppercase text-xs tracking-tighter text-left text-left">Cronologia</span>
+                                        </button>
                                     </div>
                                 </div>
                             )}
 
-                            {/* ADMIN PANEL */}
-                            {view === 'admin' && (session?.role === 'admin' || session?.email === ADMIN_EMAIL) && (
-                                <div className="space-y-8 animate-in">
-                                    <h2 className="text-4xl font-black uppercase italic tracking-tighter text-slate-900">Admin Panel</h2>
+                            {/* ARCHIVIO DOCUMENTI */}
+                            {view === 'documents' && activeBike && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <div className="flex justify-between items-center text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Archivio</h2><Icon name="Files" className="text-blue-500" size={28}/></div>
                                     
-                                    {/* Statistiche Flotta */}
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="bg-slate-900 text-white p-4 rounded-3xl text-center shadow-lg"><p className="text-[8px] font-black uppercase text-slate-400">Moto</p><p className="text-xl font-black italic">{stats.totalBikes}</p></div>
-                                        <div className="bg-white border-2 border-slate-100 p-4 rounded-3xl text-center shadow-sm"><p className="text-[8px] font-black uppercase text-slate-400">Utenti</p><p className="text-xl font-black italic">{stats.totalUsers}</p></div>
-                                        <div className="bg-red-500 text-white p-4 rounded-3xl text-center shadow-lg"><p className="text-[8px] font-black uppercase text-white/60">Critici</p><p className="text-xl font-black italic">{stats.critical}</p></div>
-                                    </div>
+                                    {[
+                                        { label: 'Bollo', key: 'bolloDeadline', num: 'bolloNum', link: 'bolloLink', icon: 'CreditCard' },
+                                        { label: 'Assicurazione', key: 'assicurazioneDeadline', num: 'assicurazioneNum', link: 'assicurazioneLink', icon: 'ShieldCheck' },
+                                        { label: 'Revisione', key: 'revisioneDeadline', num: 'revisioneNum', link: 'revisioneLink', icon: 'ClipboardCheck' }
+                                    ].map(item => (
+                                        <div key={item.key} className="p-6 bg-white rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <div className="p-2 bg-slate-50 rounded-xl text-slate-400"><Icon name={item.icon} size={20}/></div>
+                                                    <div className="text-left text-left text-left">
+                                                        <h3 className="font-black uppercase text-sm text-slate-800">{item.label}</h3>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Status Documento</p>
+                                                    </div>
+                                                </div>
+                                                {activeBike[item.key] && (
+                                                    <button onClick={() => window.open(generateCalendarLink(item.label, activeBike.model, activeBike[item.key]), "_blank")} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90"><Icon name="CalendarPlus" size={18}/></button>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 gap-2">
+                                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase">Data Scadenza</p>
+                                                    <p className="font-black text-slate-800">{activeBike[item.key] ? new Date(activeBike[item.key]).toLocaleDateString('it-IT') : 'Mancante'}</p>
+                                                </div>
+                                                {activeBike[item.num] && (
+                                                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                                        <p className="text-[8px] font-black text-slate-400 uppercase">Codice/Polizza</p>
+                                                        <p className="font-black text-slate-800">{activeBike[item.num]}</p>
+                                                    </div>
+                                                )}
+                                            </div>
 
-                                    <div className={`p-8 rounded-[3rem] space-y-6 shadow-xl text-left border ${editingUser ? 'bg-blue-950 border-blue-800 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2"><Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> {editingUser ? `Modifica: ${editingUser.email}` : "Crea Nuovo Account"}</h3>
-                                        <div className="space-y-4">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Email</label><input required type="email" className="w-full bg-slate-800 rounded-2xl p-4 font-bold border border-slate-700 text-white outline-none" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Password</label><input required type="text" className="w-full bg-slate-800 rounded-2xl p-4 font-bold border border-slate-700 text-white outline-none" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Permessi</label><select className="w-full bg-slate-800 rounded-2xl p-4 font-bold border border-slate-700 text-white outline-none italic" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}><option value="user">Cliente Standard</option><option value="admin">Amministratore</option></select></div>
+                                            <div className="flex gap-2 text-left">
+                                                {activeBike[item.link] ? (
+                                                    <button onClick={() => window.open(activeBike[item.link], '_blank')} className="flex-1 bg-blue-600 text-white p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 text-center text-center"><Icon name="ExternalLink" size={14}/> Apri PDF/Link</button>
+                                                ) : (
+                                                    <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="flex-1 bg-slate-100 text-slate-500 p-3 rounded-2xl font-black text-[10px] uppercase active:scale-95 text-center text-center">Aggiungi Link PDF</button>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-5 rounded-2xl font-black uppercase btn-active shadow-lg">{editingUser ? "Aggiorna" : "Registra Utente"}</button>
-                                            {editingUser && <button onClick={() => { setEditingUser(null); setNewUser({ email: '', password: '', role: 'user', templateStandardId: '', templateUrgentId: '' }); }} className="bg-slate-700 text-white p-5 rounded-2xl font-black uppercase btn-active">X</button>}
-                                        </div>
-                                    </div>
+                                    ))}
+                                </div>
+                            )}
 
+                            {/* ADMIN PANEL */}
+                            {view === 'admin' && isAdmin && (
+                                <div className="space-y-8 animate-in text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Admin Panel</h2>
                                     <div className="space-y-3">
-                                        <h3 className="font-black uppercase text-[10px] tracking-[0.2em] text-slate-400 ml-4">Elenco Anagrafiche</h3>
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Status Flotta Critico ({criticalFleet.length})</h3>
+                                        {criticalFleet.map(b => (
+                                            <div key={b.id} className="bg-red-50 border-2 border-red-100 p-4 rounded-3xl flex items-center justify-between">
+                                                <div className="text-left text-left text-left"><p className="font-black text-xs uppercase leading-none text-left">{b.model}</p><p className="text-[8px] text-red-500 font-bold mt-1 uppercase text-left">{b.dls.map(d => d.type).join(", ")}</p></div>
+                                                <button onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="p-2 bg-white rounded-xl shadow-sm text-red-500"><Icon name="ChevronLeft" size={16} className="rotate-180" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left"><Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> {editingUser ? `Modifica: ${editingUser.email}` : "Nuovo Profilo"}</h3>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Email Account</label><input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Password</label><input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Ruolo Accesso</label><select className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold italic" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}><option value="user">Cliente Standard</option><option value="admin">Amministratore</option></select></div>
+                                        <div className="grid grid-cols-2 gap-2 text-left">
+                                            <input placeholder="ID Std" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700" value={newUser.templateStandardId} onChange={e => setNewUser({...newUser, templateStandardId: e.target.value})} />
+                                            <input placeholder="ID Urg" className="w-full p-3 bg-slate-800 rounded-xl text-xs text-white border border-slate-700" value={newUser.templateUrgentId} onChange={e => setNewUser({...newUser, templateUrgentId: e.target.value})} />
+                                        </div>
+                                        <div className="flex gap-2"><button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active shadow-lg text-center text-center">{editingUser ? "Salva" : "Crea"}</button>{editingUser && <button onClick={() => { setEditingUser(null); setNewUser({ email:'', password:'', role:'user', templateStandardId:'', templateUrgentId:'' }); }} className="bg-slate-700 text-white p-4 rounded-xl font-black uppercase btn-active text-center">X</button>}</div>
+                                    </div>
+                                    <div className="space-y-3 text-left">
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left">Lista Utenti</h3>
                                         {allUsers.map(u => {
                                             const showPass = showPassMap[u.id];
                                             return (
-                                                <div key={u.id} className="bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] flex justify-between items-center shadow-sm">
-                                                    <div className="text-left space-y-1">
-                                                        <p className="font-black text-sm text-slate-900 leading-none">{String(u.email)}</p>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>{u.role}</span>
-                                                            <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                                                                <span className="text-[9px] text-slate-500 font-bold uppercase">{showPass ? u.password : '••••••••'}</span>
-                                                                <button onClick={() => setShowPassMap(prev => ({...prev, [u.id]: !showPass}))} className="text-slate-400 hover:text-slate-600">
-                                                                    <Icon name={showPass ? "EyeOff" : "Eye"} size={10} />
-                                                                </button>
-                                                            </div>
+                                                <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm text-left">
+                                                    <div className="flex flex-col gap-1 text-left">
+                                                        <p className="font-black text-sm text-slate-800 leading-none">{String(u.email)}</p>
+                                                        <div className="flex items-center gap-2 mt-1 text-left">
+                                                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{u.role === 'admin' ? 'Amministratore' : 'Utente'}</span>
+                                                            <button onClick={() => setShowPassMap(prev => ({...prev, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500"><Icon name={showPass ? "EyeOff" : "Eye"} size={10} /></button>
+                                                            <span className="text-[9px] text-slate-400 font-black">{showPass ? u.password : '••••••••'}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="flex gap-2"><button onClick={() => { setEditingUser(u); startEditUser(u); window.scrollTo({top:0, behavior:'smooth'}); }} className="p-3 bg-blue-50 text-blue-500 rounded-2xl active:scale-90"><Icon name="Edit" size={18}/></button><button onClick={() => { setModal({ title: "Elimina Utente", message: `Vuoi eliminare ${u.email}?`, confirmText: "Elimina", onConfirm: async () => { await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); setModal(null); showToast("Utente rimosso"); } }); }} className="p-3 bg-red-50 text-red-500 rounded-2xl active:scale-90"><Icon name="Trash2" size={18}/></button></div>
+                                                    <div className="flex gap-2"><button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 rounded-lg text-blue-500 active:scale-90"><Icon name="Edit" size={18}/></button><button onClick={() => { if(confirm('Eliminare?')) db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-lg active:scale-90"><Icon name="Trash2" size={18}/></button></div>
                                                 </div>
                                             );
                                         })}
@@ -524,30 +533,34 @@
                             {/* AGGIUNGI / MODIFICA VEICOLO */}
                             {(view === 'addBike' || view === 'editBike') && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">{view === 'addBike' ? 'Nuovo Veicolo' : 'Modifica Veicolo'}</h2>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">{view === 'addBike' ? 'Nuovo Veicolo' : 'Modifica Mezzo'}</h2>
                                     <form onSubmit={view === 'addBike' ? async (e) => {
-                                        e.preventDefault();
-                                        const lastDate = new Date(newBike.lastServiceDate);
-                                        const nextDate = new Date(lastDate.setFullYear(lastDate.getFullYear() + 1)).toISOString().split('T')[0];
-                                        await db.collection(`artifacts/${appId}/public/data/bikes`).add({ ...newBike, userEmail: String(session?.email || ""), odometer: Number(newBike.odometer), lastServiceKm: Number(newBike.lastServiceKm) || 0, nextServiceDeadlineDate: nextDate, createdAt: new Date().toISOString() });
-                                        setView('garage'); showToast("Moto registrata!");
+                                        e.preventDefault(); const lastDate = new Date(newBike.lastServiceDate); const nextDate = new Date(lastDate.setFullYear(lastDate.getFullYear() + 1)).toISOString().split('T')[0];
+                                        await db.collection(`artifacts/${appId}/public/data/bikes`).add({ ...newBike, userEmail: String(session?.email || ""), odometer: Number(newBike.odometer) || 0, lastServiceKm: Number(newBike.lastServiceKm) || 0, nextServiceDeadlineDate: nextDate, createdAt: new Date().toISOString() });
+                                        setView('garage'); showToast("Veicolo aggiunto!");
                                     } : async (e) => {
-                                        e.preventDefault();
-                                        await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).update(editingBike);
-                                        setEditingBike(null); setView('dashboard'); showToast("Modifiche salvate!");
-                                    }} className="space-y-4 bg-slate-50 p-8 rounded-[3rem] border-2 border-slate-100 shadow-sm">
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} /></div>
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Targa</label><input className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value.toUpperCase()}) : setEditingBike({...editingBike, targa: e.target.value.toUpperCase()})} /></div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Km Attuali</label><input required type="number" className="w-full p-4 rounded-2xl font-bold border-2 border-white" value={view === 'addBike' ? newBike.odometer : editingBike.odometer} onChange={e => view === 'addBike' ? setNewBike({...newBike, odometer: e.target.value}) : setEditingBike({...editingBike, odometer: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Data Tagliando</label><input required type="date" className="w-full p-4 rounded-2xl font-bold border-2 border-white text-xs" value={view === 'addBike' ? newBike.lastServiceDate : editingBike.lastServiceDate} onChange={e => view === 'addBike' ? setNewBike({...newBike, lastServiceDate: e.target.value}) : setEditingBike({...editingBike, lastServiceDate: e.target.value})} /></div>
+                                        e.preventDefault(); await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).update(editingBike);
+                                        setEditingBike(null); setView('dashboard'); showToast("Dati aggiornati!");
+                                    }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100 shadow-sm text-left text-left">
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase text-left text-left" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left">Targa</label><input className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase text-left text-left" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value.toUpperCase()}) : setEditingBike({...editingBike, targa: e.target.value.toUpperCase()})} /></div>
+                                        
+                                        <div className="p-4 bg-white/50 rounded-3xl border border-slate-100 space-y-3 text-left">
+                                            <p className="text-[10px] font-black uppercase text-slate-400 ml-1">Dati Scadenze & Documenti</p>
+                                            <div className="grid grid-cols-2 gap-3 text-left">
+                                                <div className="space-y-1 text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1">Bollo (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-left" value={view === 'addBike' ? newBike.bolloDeadline : editingBike.bolloDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, bolloDeadline: e.target.value}) : setEditingBike({...editingBike, bolloDeadline: e.target.value})} /></div>
+                                                <div className="space-y-1 text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1">Assic. (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-left" value={view === 'addBike' ? newBike.assicurazioneDeadline : editingBike.assicurazioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, assicurazioneDeadline: e.target.value}) : setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} /></div>
+                                            </div>
+                                            <div className="space-y-1 text-left text-left text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1">Revisione (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-left" value={view === 'addBike' ? newBike.revisioneDeadline : editingBike.revisioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, revisioneDeadline: e.target.value}) : setEditingBike({...editingBike, revisioneDeadline: e.target.value})} /></div>
+                                            
+                                            <div className="space-y-2 pt-2 border-t border-slate-100 text-left">
+                                                <input placeholder="Codice Assicurazione..." className="w-full p-3 rounded-xl text-[10px] font-bold border border-slate-200 outline-none text-left" value={view === 'addBike' ? newBike.assicurazioneNum : editingBike.assicurazioneNum} onChange={e => view === 'addBike' ? setNewBike({...newBike, assicurazioneNum: e.target.value}) : setEditingBike({...editingBike, assicurazioneNum: e.target.value})} />
+                                                <input placeholder="Link PDF Documento (Drive/Dropbox)..." className="w-full p-3 rounded-xl text-[10px] font-bold border border-slate-200 outline-none text-blue-600 underline text-left" value={view === 'addBike' ? newBike.assicurazioneLink : editingBike.assicurazioneLink} onChange={e => view === 'addBike' ? setNewBike({...newBike, assicurazioneLink: e.target.value}) : setEditingBike({...editingBike, assicurazioneLink: e.target.value})} />
+                                            </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3 pt-2">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Scad. Bollo</label><input type="date" className="w-full p-4 rounded-2xl font-bold border-2 border-white text-xs" value={view === 'addBike' ? newBike.bolloDeadline : editingBike.bolloDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, bolloDeadline: e.target.value}) : setEditingBike({...editingBike, bolloDeadline: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Scad. Assic.</label><input type="date" className="w-full p-4 rounded-2xl font-bold border-2 border-white text-xs" value={view === 'addBike' ? newBike.assicurazioneDeadline : editingBike.assicurazioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, assicurazioneDeadline: e.target.value}) : setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} /></div>
-                                        </div>
-                                        <button type="submit" className="w-full bg-orange-500 text-white p-6 rounded-[2.5rem] font-black uppercase shadow-xl mt-4 btn-active text-lg">{view === 'addBike' ? 'Registra' : 'Salva'}</button>
-                                        {view === 'editBike' && <button type="button" onClick={() => handleDeleteBike(editingBike.id)} className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black uppercase text-[10px] btn-active flex items-center justify-center gap-2"><Icon name="Trash2" size={14}/> Elimina Mezzo</button>}
+
+                                        <button type="submit" className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center text-center">Salva</button>
+                                        {view === 'editBike' && <button type="button" onClick={() => handleDeleteBike(editingBike.id)} className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black uppercase text-xs btn-active flex items-center justify-center gap-2 text-center"><Icon name="Trash2" size={14}/> Elimina Mezzo</button>}
                                     </form>
                                 </div>
                             )}
@@ -555,45 +568,35 @@
                             {/* HISTORY */}
                             {view === 'history' && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <div className="flex justify-between items-center"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 leading-none">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-5 py-3 rounded-[1.5rem] border border-emerald-200 text-right"><p className="text-[8px] font-black uppercase leading-none opacity-60">Fatturato</p><p className="text-xl font-black leading-none pt-1">€ {totalCost.toLocaleString()}</p></div></div>
+                                    <div className="flex justify-between items-center text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-200 text-right"><p className="text-[8px] font-black uppercase leading-none opacity-60 text-left">Totale Speso</p><p className="text-lg font-black leading-none pt-1 text-center text-left">€ {totalCostValue.toLocaleString()}</p></div></div>
                                     <div className="space-y-4">
-                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic font-bold">Ancora nessun intervento registrato.</div> : logs.map(l => (
-                                            <div key={l.id} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm hover:shadow-xl transition-all">
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <div className="text-left space-y-1">
-                                                        <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase border ${l.category === 'Manutenzione' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>{l.category || 'Altro'}</span>
-                                                        <h4 className="font-black text-2xl uppercase italic text-slate-900 pt-1 leading-none">{l.type}</h4>
-                                                        <p className="text-slate-400 font-bold text-xs flex items-center gap-1.5"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-2">
-                                                        <button onClick={() => { setEditingLog(l); setView('editLog'); }} className="p-2 bg-slate-50 rounded-xl text-slate-300 hover:text-orange-500"><Icon name="Edit" size={16}/></button>
-                                                        <button onClick={() => { setModal({ title: "Elimina Log", message: "Rimuovere questo intervento dal registro?", confirmText: "Rimuovi", onConfirm: async () => { await db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}/logs/${l.id}`).delete(); setModal(null); showToast("Intervento rimosso"); } }); }} className="p-2 bg-red-50 rounded-xl text-red-300 hover:text-red-500"><Icon name="Trash2" size={16}/></button>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-end border-t border-slate-50 pt-4">
-                                                    <div className="flex items-center gap-2 font-black text-slate-900 italic"><Icon name="Gauge" size={16} className="text-orange-500"/>{l.km.toLocaleString()} km</div>
-                                                    <div className="text-3xl font-black text-emerald-600 italic tracking-tighter leading-none">€{l.cost}</div>
-                                                </div>
+                                        {logs.length === 0 ? <div className="py-20 text-center text-slate-300 italic text-left">Nessun log trovato.</div> : logs.map(l => (
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[2rem] shadow-sm flex justify-between items-start text-left text-left">
+                                                <div className="text-left text-left text-left text-left text-left"><span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase text-left">Intervento</span><h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none text-left">{String(l.type)}</h4><p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p></div>
+                                                <div className="text-right text-left text-left text-left"><p className="font-black text-slate-900 text-left">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-left">€{l.cost}</p></div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* AGGIUNGI / MODIFICA LOG */}
-                            {(view === 'addLog' || view === 'editLog') && (
-                                <div className="space-y-6 animate-in text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">{view === 'addLog' ? 'Registra Lavoro' : 'Modifica Lavoro'}</h2>
-                                    <form onSubmit={handleSaveLog} className="space-y-4 bg-slate-900 text-white p-8 rounded-[3rem] shadow-xl border border-slate-800">
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Descrizione Intervento</label><input required className="w-full p-5 bg-slate-800 rounded-2xl font-bold border border-slate-700 focus:border-orange-500 outline-none" value={view === 'addLog' ? newLog.type : editingLog.type} onChange={e => view === 'addLog' ? setNewLog({...newLog, type: e.target.value}) : setEditingLog({...editingLog, type: e.target.value})} placeholder="Es. Cambio Olio..." /></div>
-                                        <div className="grid grid-cols-2 gap-3 text-left">
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Chilometri</label><input required type="number" className="w-full p-5 bg-slate-800 rounded-2xl font-bold border border-slate-700 outline-none" value={view === 'addLog' ? newLog.km : editingLog.km} onChange={e => view === 'addLog' ? setNewLog({...newLog, km: e.target.value}) : setEditingLog({...editingLog, km: e.target.value})} /></div>
-                                            <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Costo (€)</label><input required type="number" className="w-full p-5 bg-slate-800 rounded-2xl font-bold border border-slate-700 outline-none" value={view === 'addLog' ? newLog.cost : editingLog.cost} onChange={e => view === 'addLog' ? setNewLog({...newLog, cost: e.target.value}) : setEditingLog({...editingLog, cost: e.target.value})} /></div>
+                            {/* ADD LOG */}
+                            {view === 'addLog' && (
+                                <div className="space-y-6 animate-in text-left text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Registra Lavoro</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault(); const kv = Number(newLog.km) || 0; const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}/logs`;
+                                        await db.collection(path).add({ ...newLog, km: kv, cost: Number(newLog.cost) || 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                        if (kv > (Number(activeBike?.odometer) || 0)) await db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).update({ odometer: kv });
+                                        setView('dashboard'); setNewLog({ type: '', km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione' }); showToast("Intervento registrato");
+                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left text-left text-left text-left">
+                                        <input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})} placeholder="Descrizione (Es. Cambio Olio)" />
+                                        <div className="grid grid-cols-2 gap-3 text-left text-left">
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})} placeholder="Km" />
+                                            <input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})} placeholder="Costo €" />
                                         </div>
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Data Intervento</label><input required type="date" className="w-full p-5 bg-slate-800 rounded-2xl font-bold border border-slate-700 outline-none" value={view === 'addLog' ? newLog.date : editingLog.date} onChange={e => view === 'addLog' ? setNewLog({...newLog, date: e.target.value}) : setEditingLog({...editingLog, date: e.target.value})} /></div>
-                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Categoria</label><select className="w-full p-5 bg-slate-800 rounded-2xl font-bold border border-slate-700 outline-none italic" value={view === 'addLog' ? newLog.category : editingLog.category} onChange={e => view === 'addLog' ? setNewLog({...newLog, category: e.target.value}) : setEditingLog({...editingLog, category: e.target.value})}><option value="Manutenzione">Manutenzione</option><option value="Extra">Extra / Riparazione</option><option value="Pneumatici">Pneumatici</option><option value="Accessori">Accessori</option></select></div>
-                                        <button className="w-full bg-orange-500 text-white p-6 rounded-[2.5rem] font-black uppercase shadow-lg mt-4 btn-active text-lg italic">SALVA NEL REGISTRO</button>
-                                        <button type="button" onClick={() => setView('history')} className="w-full text-slate-500 font-bold uppercase text-[10px] pt-4 text-center">Indietro senza salvare</button>
+                                        <input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left" value={newLog.date} onChange={e => setNewLog({...newLog, date: e.target.value})} />
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center text-center">Registra</button>
                                     </form>
                                 </div>
                             )}
@@ -601,7 +604,6 @@
                         </main>
                         
                         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-                        {modal && <Modal {...modal} onCancel={() => setModal(null)} />}
                         
                         <BottomNav view={view} setView={setView} activeBike={activeBike} />
                     </div>
