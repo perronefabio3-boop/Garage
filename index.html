@@ -95,7 +95,8 @@
                 ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
                 ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>,
                 Files: <><path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V6.5L15.5 2z"/><path d="M3 7.6v12.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h9.8"/><path d="M15 2v5h5"/></>,
-                TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>
+                TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+                RotateCcw: <><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>
             };
             return (
                 <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -185,7 +186,7 @@
         };
 
         function BottomNav({ view, setView, activeBike }) {
-            const hiddenViews = ['admin', 'addBike', 'editBike', 'login', 'addLog', 'editLog', 'documents'];
+            const hiddenViews = ['admin', 'addBike', 'editBike', 'login', 'addLog', 'editLog', 'documents', 'trash'];
             if (!activeBike || hiddenViews.includes(view)) return null;
             return (
                 <nav className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-8 md:p-4 max-w-md mx-auto rounded-t-[2.5rem] shadow-[0_-8px_40px_rgba(0,0,0,0.12)] z-40">
@@ -223,6 +224,7 @@
             const [selectedBikeId, setSelectedBikeId] = useState(null);
             const [activeBike, setActiveBike] = useState(null);
             const [logs, setLogs] = useState([]);
+            const [trashLogs, setTrashLogs] = useState([]);
             const [allUsers, setAllUsers] = useState([]);
 
             const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -286,7 +288,13 @@
                         if (curr) setSession(prev => ({ ...prev, ...curr, role: (String(prev?.email || session.email).toLowerCase() === ADMIN_EMAIL.toLowerCase()) ? 'admin' : (curr.role || 'user') }));
                     }
                 });
-                return () => { unsubB(); unsubU(); };
+                
+                // Listener Cestino (Sempre visibile all'admin o all'utente proprietario)
+                const unsubTrash = db.collection(`${bPath}/trash`).onSnapshot(s => {
+                    setTrashLogs(s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
+                });
+
+                return () => { unsubB(); unsubU(); unsubTrash(); };
             }, [currentUser, session?.email]);
 
             useEffect(() => {
@@ -349,21 +357,56 @@
                 showToast("Template applicato!");
             };
 
+            // --- LOGICA CESTINO (RECUPERO) ---
+            
+            const handleSoftDeleteLog = async (logId, bikeId) => {
+                const logData = logs.find(l => l.id === logId);
+                if (!logData) return;
+                
+                openModal("Sposta nel Cestino", "L'intervento verrà rimosso dalla cronologia ma potrà essere recuperato.", async () => {
+                    try {
+                        const trashCol = db.collection(`artifacts/${appId}/public/data/trash`);
+                        await trashCol.add({
+                            ...logData,
+                            originalBikeId: bikeId,
+                            originalBikeModel: activeBike.model,
+                            deletedAt: new Date().toISOString()
+                        });
+                        await db.doc(`artifacts/${appId}/public/data/bikes/${bikeId}/logs/${logId}`).delete();
+                        closeModal();
+                        showToast("Spostato nel cestino");
+                    } catch (err) { showToast("Errore eliminazione", "error"); }
+                });
+            };
+
+            const handleRestoreLog = async (trashLog) => {
+                const { id, originalBikeId, deletedAt, originalBikeModel, ...logData } = trashLog;
+                try {
+                    await db.collection(`artifacts/${appId}/public/data/bikes/${originalBikeId}/logs`).add(logData);
+                    await db.doc(`artifacts/${appId}/public/data/trash/${id}`).delete();
+                    showToast("Intervento ripristinato!");
+                } catch (err) { showToast("Errore ripristino", "error"); }
+            };
+
+            const handlePermanentDelete = async (trashLogId) => {
+                openModal("Elimina Permanente", "Questa azione non può essere annullata.", async () => {
+                    await db.doc(`artifacts/${appId}/public/data/trash/${trashLogId}`).delete();
+                    closeModal();
+                    showToast("Eliminato definitivamente");
+                });
+            };
+
             const addLogItem = (isEditing = false) => {
                 if(isEditing) setEditingLog(prev => ({ ...prev, items: [...prev.items, ''] }));
                 else setNewLog(prev => ({ ...prev, items: [...prev.items, ''] }));
             };
 
             const removeLogItem = (index, isEditing = false) => {
-                if (isEditing) {
-                    if (editingLog.items.length <= 1) return;
-                    const updated = [...editingLog.items]; updated.splice(index, 1);
-                    setEditingLog(prev => ({ ...prev, items: updated }));
-                } else {
-                    if (newLog.items.length <= 1) return;
-                    const updated = [...newLog.items]; updated.splice(index, 1);
-                    setNewLog(prev => ({ ...prev, items: updated }));
-                }
+                const source = isEditing ? editingLog : newLog;
+                if (source.items.length <= 1) return;
+                const updated = [...source.items]; updated.splice(index, 1);
+                if(isEditing) setEditingLog(prev => ({ ...prev, items: updated }));
+                else setNewLog(prev => ({ ...prev, items: updated }));
             };
 
             const updateLogItem = (index, value, isEditing = false) => {
@@ -387,7 +430,7 @@
                         <main className="flex-1 overflow-y-auto p-5 pb-10 hide-scrollbar text-left">
                             {/* LOGIN */}
                             {view === 'login' && (
-                                <div className="py-10 space-y-8 animate-in text-center text-left">
+                                <div className="py-10 space-y-8 animate-in text-center text-left text-left">
                                     <div className="space-y-4">
                                         <div className="mx-auto w-fit flex justify-center text-center"><AppLogo size={130} /></div>
                                         <h2 className="text-3xl font-black uppercase italic tracking-tighter text-center">Garage Fleet</h2>
@@ -405,7 +448,7 @@
                             {view === 'garage' && (
                                 <div className="space-y-6 animate-in">
                                     <div className="flex justify-between items-end">
-                                        <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">I tuoi mezzi</p></div>
+                                        <div className="text-left text-left text-left"><h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">I tuoi mezzi</p></div>
                                         <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg btn-active"><Icon name="Plus" size={24}/></button>
                                     </div>
                                     <div className="relative">
@@ -440,18 +483,17 @@
                             {/* DASHBOARD */}
                             {view === 'dashboard' && activeBike && (
                                 <div className="space-y-6 animate-in">
-                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left">
+                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left text-left text-left">
                                         <div className="relative z-10 text-left">
                                             <div className="flex justify-between items-start">
                                                 <h2 className="text-2xl font-black italic uppercase text-orange-500 text-left">{String(activeBike.model)}</h2>
                                                 <button onClick={() => { setEditingBike({...activeBike}); setView('editBike'); }} className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors btn-active"><Icon name="Edit" size={18} className="text-white" /></button>
                                             </div>
-                                            <p className="text-5xl font-black mt-3 text-left">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase text-left text-left">km</span></p>
+                                            <p className="text-5xl font-black mt-3 text-left">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm opacity-40 uppercase text-left text-left text-left">km</span></p>
                                         </div>
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
 
-                                    {/* ANALISI COSTI */}
                                     <div className="grid grid-cols-2 gap-4 text-left">
                                         <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left">
                                             <div className="flex items-center gap-2 mb-1"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400">Costo al KM</span></div>
@@ -480,7 +522,7 @@
                                         );
                                     })()}
 
-                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                    <div className="grid grid-cols-2 gap-4 text-left text-left">
                                         <button onClick={() => setView('documents')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-left">
                                             <Icon name="Files" className="text-blue-500" size={32} />
                                             <span className="font-black uppercase text-xs tracking-tighter text-left">Archivio Doc.</span>
@@ -496,7 +538,7 @@
                             {/* ARCHIVIO DOCUMENTI */}
                             {view === 'documents' && activeBike && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <div className="flex justify-between items-center text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Archivio</h2><Icon name="Files" className="text-blue-500" size={28}/></div>
+                                    <div className="flex justify-between items-center text-left text-left text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Archivio</h2><Icon name="Files" className="text-blue-500" size={28}/></div>
                                     {[
                                         { label: 'Bollo', key: 'bolloDeadline', num: 'bolloNum', link: 'bolloLink', icon: 'CreditCard' },
                                         { label: 'Assicurazione', key: 'assicurazioneDeadline', num: 'assicurazioneNum', link: 'assicurazioneLink', icon: 'ShieldCheck' },
@@ -512,7 +554,7 @@
                                                     </div>
                                                 </div>
                                                 {activeBike[item.key] && (
-                                                    <button onClick={() => window.open(generateCalendarLink(item.label, activeBike.model, activeBike[item.key]), "_blank")} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90 text-left"><Icon name="CalendarPlus" size={18}/></button>
+                                                    <button onClick={() => window.open(generateCalendarLink(item.label, activeBike.model, activeBike[item.key]), "_blank")} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90 text-left text-left"><Icon name="CalendarPlus" size={18}/></button>
                                                 )}
                                             </div>
                                             <div className="grid grid-cols-1 gap-2 text-left text-left text-slate-900">
@@ -533,35 +575,35 @@
 
                             {/* ADMIN PANEL */}
                             {view === 'admin' && isAdmin && (
-                                <div className="space-y-8 animate-in text-left text-left">
+                                <div className="space-y-8 animate-in text-left text-left text-left text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left">Admin Panel</h2>
                                     <div className="space-y-3 text-left">
                                         <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Status Flotta Critico ({criticalFleet.length})</h3>
                                         {criticalFleet.map(b => (
-                                            <div key={b.id} className="bg-red-50 border-2 border-red-100 p-4 rounded-3xl flex items-center justify-between text-slate-900">
+                                            <div key={b.id} className="bg-red-50 border-2 border-red-100 p-4 rounded-3xl flex items-center justify-between text-slate-900 text-left">
                                                 <div className="text-left text-left text-left"><p className="font-black text-xs uppercase leading-none text-left">{b.model}</p><p className="text-[8px] text-red-500 font-bold mt-1 uppercase text-left">{b.dls.map(d => d.type).join(", ")}</p></div>
-                                                <button onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="p-2 bg-white rounded-xl shadow-sm text-red-500 text-left"><Icon name="ChevronLeft" size={16} className="rotate-180" /></button>
+                                                <button onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="p-2 bg-white rounded-xl shadow-sm text-red-500 text-left text-left"><Icon name="ChevronLeft" size={16} className="rotate-180" /></button>
                                             </div>
                                         ))}
                                     </div>
                                     <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl text-left border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
-                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left"><Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> {editingUser ? `Modifica: ${editingUser.email}` : "Nuovo Profilo"}</h3>
-                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Email Account</label><input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} /></div>
-                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Password</label><input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} /></div>
-                                        <div className="space-y-1 text-left text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Ruolo Accesso</label><select className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold italic" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}><option value="user">Cliente Standard</option><option value="admin">Amministratore</option></select></div>
-                                        <div className="flex gap-2 text-left"><button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active shadow-lg text-center text-center">{editingUser ? "Salva" : "Crea"}</button>{editingUser && <button onClick={() => { setEditingUser(null); setNewUser({ email:'', password:'', role:'user', templateStandardId:'', templateUrgentId:'' }); }} className="bg-slate-700 text-white p-4 rounded-xl font-black uppercase btn-active text-center">X</button>}</div>
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left text-left text-left"><Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> {editingUser ? `Modifica: ${editingUser.email}` : "Nuovo Profilo"}</h3>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2">Email Account</label><input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Password</label><input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Ruolo Accesso</label><select className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold italic text-left" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value})}><option value="user">Cliente Standard</option><option value="admin">Amministratore</option></select></div>
+                                        <div className="flex gap-2 text-left"><button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-4 rounded-xl font-black uppercase btn-active shadow-lg text-center text-center text-center text-center">{editingUser ? "Salva" : "Crea"}</button>{editingUser && <button onClick={() => { setEditingUser(null); setNewUser({ email:'', password:'', role:'user', templateStandardId:'', templateUrgentId:'' }); }} className="bg-slate-700 text-white p-4 rounded-xl font-black uppercase btn-active text-center text-center text-center text-center">X</button>}</div>
                                     </div>
                                     <div className="space-y-3 text-left">
-                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Lista Utenti</h3>
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left text-left">Lista Utenti</h3>
                                         {allUsers.map(u => {
                                             const showPass = showPassMap[u.id];
                                             return (
                                                 <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm text-left">
                                                     <div className="flex flex-col gap-1 text-left text-slate-900">
                                                         <p className="font-black text-sm text-slate-800 leading-none">{String(u.email)}</p>
-                                                        <div className="flex items-center gap-2 mt-1 text-left text-left text-left text-left">
-                                                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{u.role}</span>
-                                                            <button onClick={() => setShowPassMap(prev => ({...prev, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left text-slate-900"><Icon name={showPass ? "EyeOff" : "Eye"} size={10} /></button>
+                                                        <div className="flex items-center gap-2 mt-1 text-left text-left text-left text-left text-left">
+                                                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{u.role === 'admin' ? 'Amministratore' : 'Utente'}</span>
+                                                            <button onClick={() => setShowPassMap(prev => ({...prev, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left text-slate-900 text-left"><Icon name={showPass ? "EyeOff" : "Eye"} size={10} /></button>
                                                             <span className="text-[9px] text-slate-400 font-black text-left">{showPass ? u.password : '••••••••'}</span>
                                                         </div>
                                                     </div>
@@ -569,6 +611,31 @@
                                                 </div>
                                             );
                                         })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CESTINO (NUOVA VISTA) */}
+                            {view === 'trash' && (
+                                <div className="space-y-6 animate-in text-left">
+                                    <div className="flex justify-between items-center text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Cestino</h2><Icon name="Trash2" className="text-red-500" size={28}/></div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase ml-2">Interventi eliminati di recente</p>
+                                    <div className="space-y-4 text-left text-slate-900">
+                                        {trashLogs.length === 0 ? <div className="py-20 text-center text-slate-300 italic text-left">Il cestino è vuoto.</div> : trashLogs.map(l => (
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-3 text-left">
+                                                <div className="flex justify-between items-start text-left text-left">
+                                                    <div className="text-left text-left">
+                                                        <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[9px] font-black uppercase text-left">{l.originalBikeModel}</span>
+                                                        <h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none text-left">{String(l.type)}</h4>
+                                                        <p className="text-red-400 font-bold text-[9px] mt-1 flex items-center gap-1 text-left">Eliminato: {new Date(l.deletedAt).toLocaleDateString()}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={() => handleRestoreLog(l)} className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl active:scale-90" title="Ripristina"><Icon name="RotateCcw" size={20}/></button>
+                                                        <button onClick={() => handlePermanentDelete(l.id)} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90" title="Elimina Permanente"><Icon name="Trash2" size={20}/></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -585,18 +652,18 @@
                                         e.preventDefault(); await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).update(editingBike);
                                         setEditingBike(null); setView('dashboard'); showToast("Dati aggiornati!");
                                     }} className="space-y-4 bg-slate-50 p-7 rounded-[3rem] border-2 border-slate-100 shadow-sm text-left">
-                                        <div className="space-y-1 text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase text-left text-slate-900" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} /></div>
-                                        <div className="space-y-1 text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Targa</label><input className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase text-left text-slate-900" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value.toUpperCase()}) : setEditingBike({...editingBike, targa: e.target.value.toUpperCase()})} /></div>
+                                        <div className="space-y-1 text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Modello</label><input required className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase text-left text-slate-900 text-left" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left">Targa</label><input className="w-full p-4 rounded-2xl font-bold border-2 border-white focus:border-orange-500 outline-none uppercase text-left text-slate-900 text-left" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value.toUpperCase()}) : setEditingBike({...editingBike, targa: e.target.value.toUpperCase()})} /></div>
                                         <div className="p-4 bg-white/50 rounded-3xl border border-slate-100 space-y-3 text-left">
                                             <p className="text-[10px] font-black uppercase text-slate-400 ml-1">Dati Scadenze & Documenti</p>
                                             <div className="grid grid-cols-2 gap-3 text-left text-left">
-                                                <div className="space-y-1 text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Bollo (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-slate-900" value={view === 'addBike' ? newBike.bolloDeadline : editingBike.bolloDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, bolloDeadline: e.target.value}) : setEditingBike({...editingBike, bolloDeadline: e.target.value})} /></div>
-                                                <div className="space-y-1 text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Assic. (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-left text-slate-900" value={view === 'addBike' ? newBike.assicurazioneDeadline : editingBike.assicurazioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, assicurazioneDeadline: e.target.value}) : setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} /></div>
+                                                <div className="space-y-1 text-left text-left text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Bollo (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-slate-900 text-left text-left" value={view === 'addBike' ? newBike.bolloDeadline : editingBike.bolloDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, bolloDeadline: e.target.value}) : setEditingBike({...editingBike, bolloDeadline: e.target.value})} /></div>
+                                                <div className="space-y-1 text-left text-left text-left text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Assic. (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-left text-slate-900 text-left text-left" value={view === 'addBike' ? newBike.assicurazioneDeadline : editingBike.assicurazioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, assicurazioneDeadline: e.target.value}) : setEditingBike({...editingBike, assicurazioneDeadline: e.target.value})} /></div>
                                             </div>
-                                            <div className="space-y-1 text-left text-left text-slate-900"><label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Revisione (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-slate-900" value={view === 'addBike' ? newBike.revisioneDeadline : editingBike.revisioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, revisioneDeadline: e.target.value}) : setEditingBike({...editingBike, revisioneDeadline: e.target.value})} /></div>
+                                            <div className="space-y-1 text-left text-left text-slate-900 text-left"><label className="text-[8px] font-black uppercase text-slate-400 ml-1 text-left">Revisione (Data)</label><input type="date" className="w-full p-3 rounded-xl font-bold text-[10px] text-left text-slate-900 text-left text-left" value={view === 'addBike' ? newBike.revisioneDeadline : editingBike.revisioneDeadline} onChange={e => view === 'addBike' ? setNewBike({...newBike, revisioneDeadline: e.target.value}) : setEditingBike({...editingBike, revisioneDeadline: e.target.value})} /></div>
                                         </div>
-                                        <button type="submit" className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center">Salva</button>
-                                        {view === 'editBike' && <button type="button" onClick={() => openModal("Elimina Mezzo", "Tutti i dati andranno persi.", async () => { await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).delete(); closeModal(); setView('garage'); showToast("Mezzo rimosso"); })} className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black uppercase text-xs btn-active flex items-center justify-center gap-2 text-center text-center"><Icon name="Trash2" size={14}/> Elimina Mezzo</button>}
+                                        <button type="submit" className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center text-center text-center">Salva</button>
+                                        {view === 'editBike' && <button type="button" onClick={() => openModal("Elimina Mezzo", "Tutti i dati andranno persi.", async () => { await db.doc(`artifacts/${appId}/public/data/bikes/${editingBike.id}`).delete(); closeModal(); setView('garage'); showToast("Mezzo rimosso"); })} className="w-full bg-red-50 text-red-500 p-4 rounded-2xl font-black uppercase text-xs btn-active flex items-center justify-center gap-2 text-center text-center text-center text-center"><Icon name="Trash2" size={14}/> Elimina Mezzo</button>}
                                     </form>
                                 </div>
                             )}
@@ -604,28 +671,30 @@
                             {/* HISTORY */}
                             {view === 'history' && (
                                 <div className="space-y-6 animate-in text-left">
-                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-200 text-right"><p className="text-[8px] font-black uppercase leading-none opacity-60 text-left text-left text-slate-900">Totale Speso</p><p className="text-lg font-black leading-none pt-1 text-center text-left text-slate-900">€ {totalCostValue.toLocaleString()}</p></div></div>
+                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left text-left text-left"><h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Cronologia</h2><div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl border border-emerald-200 text-right"><p className="text-[8px] font-black uppercase leading-none opacity-60 text-left text-left text-slate-900">Totale Speso</p><p className="text-lg font-black leading-none pt-1 text-center text-left text-slate-900">€ {totalCostValue.toLocaleString()}</p></div></div>
                                     
-                                    {/* Filtri */}
-                                    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                                        {["Tutti", "Manutenzione", "Pneumatici", "Extra", "Accessori"].map(cat => (
-                                            <button key={cat} onClick={() => setHistoryFilter(cat)} className={`px-4 py-2 rounded-full font-black text-[10px] uppercase border-2 transition-all shrink-0 ${historyFilter === cat ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100'}`}>{cat}</button>
-                                        ))}
+                                    <div className="flex items-center justify-between gap-4 text-left">
+                                        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                                            {["Tutti", "Manutenzione", "Pneumatici", "Extra", "Accessori"].map(cat => (
+                                                <button key={cat} onClick={() => setHistoryFilter(cat)} className={`px-4 py-2 rounded-full font-black text-[10px] uppercase border-2 transition-all shrink-0 ${historyFilter === cat ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}>{cat}</button>
+                                            ))}
+                                        </div>
+                                        <button onClick={() => setView('trash')} className="p-2.5 bg-slate-900 text-white rounded-xl shadow-lg active:scale-90 transition-all text-left"><Icon name="Trash2" size={20} /></button>
                                     </div>
 
-                                    <div className="space-y-4 text-left text-slate-900 text-left text-left">
-                                        {filteredLogs.length === 0 ? <div className="py-20 text-center text-slate-300 italic text-left">Nessun log trovato per questa categoria.</div> : filteredLogs.map(l => (
-                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[2rem] shadow-sm space-y-3 text-left text-left text-left text-left text-left">
-                                                <div className="flex justify-between items-start text-left text-left text-left text-left text-left text-left text-left text-left">
+                                    <div className="space-y-4 text-left text-slate-900 text-left text-left text-left">
+                                        {filteredLogs.length === 0 ? <div className="py-20 text-center text-slate-300 italic text-left">Nessun log trovato.</div> : filteredLogs.map(l => (
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[2rem] shadow-sm space-y-3 text-left text-left text-left text-left">
+                                                <div className="flex justify-between items-start text-left text-left text-left text-left text-left text-left text-left">
                                                     <div className="text-left text-left text-left text-left text-left">
                                                         <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded text-[9px] font-black uppercase text-left">{l.category || 'Manutenzione'}</span>
                                                         <h4 className="font-black text-lg uppercase italic text-slate-800 pt-1 leading-none text-left">{String(l.type)}</h4>
                                                         <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left"><Icon name="Clock" size={12}/> {new Date(l.date).toLocaleDateString('it-IT')}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 text-left">
                                                         <div className="text-right text-slate-900"><p className="font-black text-slate-900">{(Number(l.km)).toLocaleString()} KM</p><p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-left">€{l.cost}</p></div>
                                                         <button onClick={() => { setEditingLog({ ...l, items: l.items || [''] }); setView('editLog'); }} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90 text-left text-slate-900 text-left text-left text-left"><Icon name="Edit" size={16}/></button>
-                                                        {isAdmin && <button onClick={() => openModal("Elimina Log", "Vuoi rimuovere questo intervento?", async () => { await db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}/logs/${l.id}`).delete(); closeModal(); showToast("Log eliminato"); })} className="p-2 bg-red-50 text-red-500 rounded-xl active:scale-90 text-left text-left text-slate-900"><Icon name="Trash2" size={16}/></button>}
+                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 bg-red-50 text-red-500 rounded-xl active:scale-90 text-left text-left text-slate-900"><Icon name="Trash2" size={16}/></button>
                                                     </div>
                                                 </div>
                                                 {l.items && l.items.length > 0 && (<div className="border-t border-slate-50 pt-2 space-y-1 text-left">{l.items.filter(i => i).map((item, idx) => (<div key={idx} className="text-xs text-slate-500 flex items-start gap-2 text-left"><span className="text-orange-500 mt-1">•</span> {item}</div>))}</div>)}
@@ -638,17 +707,13 @@
 
                             {/* ADD / EDIT LOG */}
                             {(view === 'addLog' || view === 'editLog') && (
-                                <div className="space-y-6 animate-in text-left text-left">
+                                <div className="space-y-6 animate-in text-left text-left text-left text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left text-left">{view === 'addLog' ? 'Registra Lavoro' : 'Modifica Lavoro'}</h2>
-                                    
-                                    {/* Template lavori (solo in creazione) */}
                                     {view === 'addLog' && (
-                                        <div className="space-y-2 text-left text-left">
+                                        <div className="space-y-2 text-left text-left text-left">
                                             <p className="text-[10px] font-black uppercase text-slate-400 ml-2">Pacchetti Rapidi</p>
                                             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-                                                {JOB_TEMPLATES.map(t => (
-                                                    <button key={t.name} type="button" onClick={() => applyTemplate(t)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase active:scale-90 shrink-0 shadow-sm border border-slate-200"> {t.name} </button>
-                                                ))}
+                                                {JOB_TEMPLATES.map(t => (<button key={t.name} type="button" onClick={() => applyTemplate(t)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase active:scale-90 shrink-0 shadow-sm border border-slate-200"> {t.name} </button>))}
                                             </div>
                                         </div>
                                     )}
@@ -657,37 +722,37 @@
                                         e.preventDefault();
                                         const currentData = view === 'addLog' ? newLog : editingLog;
                                         const kv = Number(currentData.km) || 0;
+                                        const cost = Number(currentData.cost) || 0;
                                         const path = `artifacts/${appId}/public/data/bikes/${selectedBikeId}/logs`;
                                         
-                                        // Validazione KM
                                         if (kv < (Number(activeBike?.odometer) || 0) && view === 'addLog') {
                                             return showToast("KM inferiori agli attuali!", "error");
                                         }
 
                                         if (view === 'addLog') {
-                                            await db.collection(path).add({ ...newLog, km: kv, cost: Number(newLog.cost), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                                            await db.collection(path).add({ ...newLog, km: kv, cost, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                                         } else {
-                                            await db.doc(`${path}/${editingLog.id}`).set({ ...editingLog, km: kv, cost: Number(editingLog.cost) }, { merge: true });
+                                            await db.doc(`${path}/${editingLog.id}`).set({ ...editingLog, km: kv, cost }, { merge: true });
                                         }
                                         if (kv > (Number(activeBike?.odometer) || 0)) await db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).update({ odometer: kv });
                                         setNewLog(initialLogState); setEditingLog(null); setView('history'); showToast("Lavoro salvato!");
                                     }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left">
-                                        <div className="space-y-1 text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Titolo Intervento</label><input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={view === 'addLog' ? newLog.type : editingLog.type} onChange={e => view === 'addLog' ? setNewLog({...newLog, type: e.target.value}) : setEditingLog({...editingLog, type: e.target.value})} placeholder="Es. Tagliando" /></div>
-                                        <div className="space-y-3 pt-2 text-left text-left">
-                                            <div className="flex justify-between items-center"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Dettagli</label><button type="button" onClick={() => addLogItem(view === 'editLog')} className="text-orange-500 flex items-center gap-1 font-black text-[10px] uppercase active:scale-90 text-left text-left"><Icon name="PlusCircle" size={16}/> Aggiungi</button></div>
+                                        <div className="space-y-1 text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left">Titolo Intervento</label><input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left" value={view === 'addLog' ? newLog.type : editingLog.type} onChange={e => view === 'addLog' ? setNewLog({...newLog, type: e.target.value}) : setEditingLog({...editingLog, type: e.target.value})} placeholder="Es. Tagliando" /></div>
+                                        <div className="space-y-3 pt-2 text-left text-left text-left">
+                                            <div className="flex justify-between items-center text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Dettagli</label><button type="button" onClick={() => addLogItem(view === 'editLog')} className="text-orange-500 flex items-center gap-1 font-black text-[10px] uppercase active:scale-90 text-left"><Icon name="PlusCircle" size={16}/> Aggiungi</button></div>
                                             {(view === 'addLog' ? newLog.items : editingLog.items).map((item, index) => (
-                                                <div key={index} className="flex gap-2 animate-in text-left text-left text-slate-900">
+                                                <div key={index} className="flex gap-2 animate-in text-left text-left text-slate-900 text-left">
                                                     <input required className="flex-1 p-3 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 text-xs font-medium text-left text-slate-900" value={item} onChange={e => updateLogItem(index, e.target.value, view === 'editLog')} placeholder={`Voce ${index + 1}`} />
-                                                    {(view === 'addLog' ? newLog.items : editingLog.items).length > 1 && <button type="button" onClick={() => removeLogItem(index, view === 'editLog')} className="text-red-400 p-2 text-left"><Icon name="MinusCircle" size={20}/></button>}
+                                                    {(view === 'addLog' ? newLog.items : editingLog.items).length > 1 && <button type="button" onClick={() => removeLogItem(index, view === 'editLog')} className="text-red-400 p-2 text-left text-left"><Icon name="MinusCircle" size={20}/></button>}
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3 pt-2 text-left text-slate-900">
-                                            <div className="space-y-1 text-left text-slate-900"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Km</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={view === 'addLog' ? newLog.km : editingLog.km} onChange={e => view === 'addLog' ? setNewLog({...newLog, km: e.target.value}) : setEditingLog({...editingLog, km: e.target.value})} /></div>
-                                            <div className="space-y-1 text-left text-slate-900"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Costo €</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left" value={view === 'addLog' ? newLog.cost : editingLog.cost} onChange={e => view === 'addLog' ? setNewLog({...newLog, cost: e.target.value}) : setEditingLog({...editingLog, cost: e.target.value})} /></div>
+                                        <div className="grid grid-cols-2 gap-3 pt-2 text-left text-slate-900 text-left">
+                                            <div className="space-y-1 text-left text-slate-900 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Km</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left" value={view === 'addLog' ? newLog.km : editingLog.km} onChange={e => view === 'addLog' ? setNewLog({...newLog, km: e.target.value}) : setEditingLog({...editingLog, km: e.target.value})} /></div>
+                                            <div className="space-y-1 text-left text-slate-900 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Costo €</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left" value={view === 'addLog' ? newLog.cost : editingLog.cost} onChange={e => view === 'addLog' ? setNewLog({...newLog, cost: e.target.value}) : setEditingLog({...editingLog, cost: e.target.value})} /></div>
                                         </div>
-                                        <div className="space-y-1 text-left text-slate-900"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Data</label><input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold text-left" value={view === 'addLog' ? newLog.date : editingLog.date} onChange={e => view === 'addLog' ? setNewLog({...newLog, date: e.target.value}) : setEditingLog({...editingLog, date: e.target.value})} /></div>
-                                        <div className="space-y-1 text-left text-slate-900"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Categoria</label><select className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold text-left italic" value={view === 'addLog' ? newLog.category : editingLog.category} onChange={e => view === 'addLog' ? setNewLog({...newLog, category: e.target.value}) : setEditingLog({...editingLog, category: e.target.value})}><option value="Manutenzione">Manutenzione</option><option value="Extra">Extra</option><option value="Pneumatici">Pneumatici</option><option value="Accessori">Accessori</option></select></div>
+                                        <div className="space-y-1 pt-2 text-left text-slate-900 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left">Data</label><input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold text-left text-left text-left" value={view === 'addLog' ? newLog.date : editingLog.date} onChange={e => view === 'addLog' ? setNewLog({...newLog, date: e.target.value}) : setEditingLog({...editingLog, date: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left text-slate-900 text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Categoria</label><select className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold text-left italic" value={view === 'addLog' ? newLog.category : editingLog.category} onChange={e => view === 'addLog' ? setNewLog({...newLog, category: e.target.value}) : setEditingLog({...editingLog, category: e.target.value})}><option value="Manutenzione">Manutenzione</option><option value="Extra">Extra</option><option value="Pneumatici">Pneumatici</option><option value="Accessori">Accessori</option></select></div>
                                         <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center">Salva Lavoro</button>
                                         <button type="button" onClick={() => { setView('history'); setEditingLog(null); }} className="w-full text-slate-400 font-black text-[10px] uppercase pt-2 text-center text-center">Annulla</button>
                                     </form>
@@ -697,7 +762,7 @@
                         </main>
                         
                         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-                        <Modal {...modal} onCancel={closeModal} />
+                        <Modal isOpen={modal.isOpen} title={modal.title} message={modal.message} onConfirm={modal.onConfirm} onCancel={closeModal} />
                         
                         <BottomNav view={view} setView={setView} activeBike={activeBike} />
                     </div>
