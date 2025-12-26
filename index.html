@@ -41,18 +41,16 @@
 
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); }
         
-        /* Fix per l'header del garage che deve rimanere visibile durante lo scroll */
+        /* Fix definitivo per l'header del garage bloccato durante lo scroll */
         .sticky-garage-header {
             position: sticky;
-            top: 0;
-            z-index: 30;
-            background: rgba(241, 245, 249, 0.95);
+            top: -20px; /* Compensa esattamente il padding-top: 20px (p-5) del contenitore main */
+            z-index: 40;
+            background: rgba(241, 245, 249, 0.98);
             backdrop-filter: blur(12px);
-            margin-left: -20px;
-            margin-right: -20px;
-            margin-top: -20px;
+            margin: -20px -20px 20px -20px;
             padding: 20px;
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            border-bottom: 1px solid #e2e8f0;
         }
     </style>
 </head>
@@ -79,7 +77,7 @@
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
-        const APP_VERSION = "1.0.1"; // Identificativo versione per tracciare i caricamenti online
+        const APP_VERSION = "1.0.2"; // Incrementata versione dopo il fix dello sticky header
 
         const SECRET_KEY = "GarageSnoopyPass2025!"; 
         const ENC_PREFIX = "ENC_";
@@ -123,9 +121,9 @@
                 TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
                 RotateCcw: <><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>,
                 Eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
-                EyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
+                EyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-672-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
                 Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
-                Search: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="21" y1="21" y2="16.65"/></>,
+                Search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
                 Edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
                 ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="14" x2="21" y2="3"/></>,
                 ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
@@ -303,7 +301,7 @@
                 return km === 0 ? "0.000" : (totalCostValue / km).toFixed(3);
             }, [activeBike, totalCostValue]);
 
-            // --- FIREBASE SYNC ---
+            // --- FIREBASE SYNC (Regola 3) ---
             useEffect(() => {
                 auth.signInAnonymously();
                 return auth.onAuthStateChanged(u => { setCurrentUser(u); setLoading(false); });
@@ -312,6 +310,7 @@
             useEffect(() => {
                 if (!currentUser) return;
                 const p = `artifacts/${appId}/public/data`;
+                
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
                 const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
                 const unsubT = db.collection(`${p}/trash`).onSnapshot(s => setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
@@ -388,9 +387,10 @@
                             originalBikeModel: String(activeBike.model),
                             deletedAt: new Date().toISOString()
                         });
-                        await db.doc(`artifacts/${appId}/public/data/bikes/${bikeId}/logs/${logId}`).delete();
-                        closeModal(); showToast("Spostato nel cestino");
-                    }
+                        await db.doc(`artifacts/${appId}/public/data/logs/${logId}`).delete();
+                        closeModal(); showToast("Spostato");
+                    },
+                    onCancel: closeModal
                 });
             };
 
@@ -531,19 +531,19 @@
                                                         <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left">{String(l.type)}</h4>
                                                         <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-left text-left">
+                                                    <div className="flex items-center gap-2 text-left text-left text-left">
                                                         <div className="text-right text-slate-900 text-left text-left text-left">
                                                             <p className="font-black text-slate-900 text-sm">{(Number(l.km || 0)).toLocaleString()} KM</p>
-                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left">€{l.cost}</p>
+                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-left">€{l.cost}</p>
                                                         </div>
-                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left"><Icon name="Trash2" size={18}/></button>
+                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-left"><Icon name="Trash2" size={18}/></button>
                                                     </div>
                                                 </div>
-                                                {/* Dettagli dell'intervento (Lista puntata) */}
+                                                {/* Dettagli dell'intervento (Lista puntata) - RIPRISTINATI */}
                                                 {l.items && l.items.length > 0 && (
-                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left">
+                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left text-left">
                                                         {l.items.filter(i => i && String(i).trim() !== "").map((item, idx) => (
-                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left">
+                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left text-left">
                                                                 <span className="text-orange-500 mt-1">•</span> {String(item)}
                                                             </div>
                                                         ))}
