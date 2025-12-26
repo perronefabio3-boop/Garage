@@ -44,7 +44,7 @@
         /* Fix strutturale per l'header del garage bloccato durante lo scroll */
         .sticky-garage-header {
             position: sticky;
-            top: -20px;
+            top: -20px; /* Compensa esattamente il padding-top: 20px (p-5) del contenitore main */
             z-index: 50;
             background-color: #f1f5f9;
             padding: 20px;
@@ -52,7 +52,7 @@
             margin-right: -20px;
             margin-top: -20px;
             border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
@@ -79,7 +79,7 @@
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
-        const APP_VERSION = "1.1.1"; // Fix Syntax Error & Pro Restoration
+        const APP_VERSION = "1.1.2"; // Fix Sticky Header & Syntax Errors
 
         const SECRET_KEY = "GarageSnoopyPass2025!"; 
         const ENC_PREFIX = "ENC_";
@@ -128,11 +128,11 @@
                 Search: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="21" y1="21" y2="16.65"/></>,
                 Edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
                 ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="14" x2="21" y2="3"/></>,
+                Save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>,
                 ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
                 CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
                 ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
-                CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
-                Save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>
+                CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>
             };
             return (
                 <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -162,8 +162,8 @@
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in fade-in">
                     <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-                        <div className="text-center space-y-2">
-                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">{String(title)}</h3>
+                        <div className="text-center space-y-2 text-slate-900">
+                            <h3 className="text-xl font-black uppercase italic tracking-tighter">{String(title)}</h3>
                             <p className="text-sm text-slate-500 font-medium">{String(message)}</p>
                         </div>
                         <div className="flex flex-col gap-2">
@@ -479,12 +479,13 @@
                             )}
 
                             {view === 'garage' && session && (
-                                <div className="space-y-6 animate-in text-left">
+                                <div className="text-left">
+                                    {/* HEADER GARAGE FISSO - Rimosse animazioni dal padre per stabilità sticky */}
                                     <div className="sticky-garage-header text-left">
                                         <div className="flex justify-between items-end mb-6 text-left">
                                             <div className="text-left text-slate-900">
                                                 <h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2>
-                                                <p className="text-slate-400 text-[10px] font-black uppercase mt-2 text-left">I Tuoi Mezzi</p>
+                                                <p className="text-slate-400 text-[10px] font-black uppercase mt-2">I Tuoi Mezzi</p>
                                             </div>
                                             <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg active:scale-95 transition-transform"><Icon name="Plus" size={24}/></button>
                                         </div>
@@ -494,7 +495,8 @@
                                         </div>
                                     </div>
                                     
-                                    <div className="grid gap-4 text-left">
+                                    {/* LISTA VEICOLI SCORREVOLE - Animazione applicata solo qui */}
+                                    <div className="grid gap-4 text-left animate-in mt-4">
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
                                             return (
@@ -534,9 +536,9 @@
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left text-left">
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-left"><div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left text-left">€ {costPerKm}</p></div>
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-left"><div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left text-left">€ {costPerKm}</p></div>
                                         <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900 text-left text-left">
-                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-slate-400 text-left">Totale Spesa</span></div>
+                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-slate-400">Totale Spesa</span></div>
                                             <p className="text-xl font-black text-left text-left text-left text-left">€ {totalCostValue.toLocaleString()}</p>
                                         </div>
                                     </div>
@@ -547,16 +549,16 @@
                                         </button>
                                         <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-white text-left text-left text-left text-white">
                                             <Icon name="Plus" className="text-orange-500" size={32} />
-                                            <span className="font-black uppercase text-xs tracking-tighter text-white text-left text-left text-white text-left text-white">Nuovo Log</span>
+                                            <span className="font-black uppercase text-xs tracking-tighter text-white text-left text-left text-white text-left text-white text-white">Nuovo Log</span>
                                         </button>
                                     </div>
-                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900 text-left text-left text-left"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter text-left text-left text-slate-900">Archivio Documenti Protetti</span></button>
+                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900 text-left text-left text-left text-slate-900"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter text-left text-left text-slate-900">Archivio Documenti Protetti</span></button>
                                 </div>
                             )}
 
                             {view === 'documents' && activeBike && (
                                 <div className="space-y-6 animate-in text-left text-slate-900 text-left text-left">
-                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left text-left">
+                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left">
                                         <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left text-left">Archivio</h2>
                                         <Icon name="Files" className="text-blue-500" size={28}/>
                                     </div>
@@ -565,28 +567,28 @@
                                         { label: 'Assicurazione', key: 'assicurazioneDeadline', num: 'assicurazioneNum', link: 'assicurazioneLink', icon: 'ShieldCheck' },
                                         { label: 'Revisione', key: 'revisioneDeadline', num: 'revisioneNum', link: 'revisioneLink', icon: 'ClipboardCheck' }
                                     ].map(item => (
-                                        <div key={item.key} className="p-6 bg-white rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-4 text-left text-left text-left">
+                                        <div key={item.key} className="p-6 bg-white rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-4 text-left text-left text-left text-left">
                                             <div className="flex justify-between items-start text-left text-slate-900 text-left text-left">
-                                                <div className="flex items-center gap-3 text-left">
+                                                <div className="flex items-center gap-3 text-left text-left">
                                                     <div className="p-2 bg-slate-50 rounded-xl text-slate-400 text-center text-center"><Icon name={item.icon} size={20}/></div>
                                                     <div className="text-left text-left text-left">
                                                         <h3 className="font-black uppercase text-sm text-slate-800 text-left text-left">{String(item.label)}</h3>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase text-left text-left text-left">Status Documento</p>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase text-left text-left">Status Documento</p>
                                                     </div>
                                                 </div>
                                                 {activeBike[item.key] && (
                                                     <button onClick={() => window.open(generateCalendarLink(item.label, activeBike.model, activeBike[item.key]), "_blank")} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90 text-left text-center text-center"><Icon name="CalendarPlus" size={18}/></button>
                                                 )}
                                             </div>
-                                            <div className="grid grid-cols-1 gap-2 text-left text-slate-900 text-left text-left text-left">
-                                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left text-left">Data Scadenza</p><p className="font-black text-slate-800 text-left text-left text-left text-left">{activeBike[item.key] ? new Date(activeBike[item.key]).toLocaleDateString('it-IT') : 'Mancante'}</p></div>
-                                                {activeBike[item.num] && (<div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left text-left text-left">Codice/Polizza</p><p className="font-black text-slate-800 text-left text-left text-left text-left text-left">{String(activeBike[item.num])}</p></div>)}
+                                            <div className="grid grid-cols-1 gap-2 text-left text-slate-900 text-left text-left">
+                                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left">Data Scadenza</p><p className="font-black text-slate-800 text-left text-left text-left">{activeBike[item.key] ? new Date(activeBike[item.key]).toLocaleDateString('it-IT') : 'Mancante'}</p></div>
+                                                {activeBike[item.num] && (<div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left text-left">Codice/Polizza</p><p className="font-black text-slate-800 text-left text-left text-left text-left">{String(activeBike[item.num])}</p></div>)}
                                             </div>
                                             <div className="flex gap-2 text-left text-left">
                                                 {activeBike[item.link] ? (
-                                                    <button onClick={() => window.open(String(activeBike[item.link]), '_blank')} className="flex-1 bg-blue-600 text-white p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 text-center text-center text-center"><Icon name="ExternalLink" size={14}/> Apri PDF/Link</button>
+                                                    <button onClick={() => window.open(String(activeBike[item.link]), '_blank')} className="flex-1 bg-blue-600 text-white p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 text-center text-center"><Icon name="ExternalLink" size={14}/> Apri PDF/Link</button>
                                                 ) : (
-                                                    <div className="flex-1 bg-slate-100 text-slate-400 p-3 rounded-2xl font-black text-[10px] uppercase text-center italic leading-none flex items-center justify-center text-center text-center">Link non presente</div>
+                                                    <div className="flex-1 bg-slate-100 text-slate-400 p-3 rounded-2xl font-black text-[10px] uppercase text-center italic leading-none flex items-center justify-center text-center text-center text-center">Link non presente</div>
                                                 )}
                                             </div>
                                         </div>
@@ -601,34 +603,35 @@
                                         <button onClick={() => setView('trash')} className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg active:scale-90 text-white text-left text-center"><Icon name="Trash2" size={20}/></button>
                                     </div>
                                     <div className="space-y-5 text-left text-slate-900 text-left text-left">
-                                        {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px] text-center text-center">Nessun log trovato</p> : logs.map(l => (
-                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left text-left text-left">
-                                                <div className="flex justify-between items-start text-left text-slate-900 text-left text-left text-left">
-                                                    <div className="text-left space-y-1 text-left text-left text-left">
-                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-left text-left text-left">{String(l.category)}</span>
-                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left text-left text-left text-left">{String(l.type)}</h4>
-                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left text-slate-400 text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
+                                        {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px] text-center">Nessun log trovato</p> : logs.map(l => (
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left text-left">
+                                                <div className="flex justify-between items-start text-left text-slate-900 text-left text-left">
+                                                    <div className="text-left space-y-1 text-left text-slate-900">
+                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-left">{String(l.category)}</span>
+                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left text-left">{String(l.type)}</h4>
+                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left text-slate-400"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-left text-left text-left text-left text-left">
-                                                        <div className="text-right text-slate-900 text-left text-left text-left text-slate-900 text-left text-left text-left">
-                                                            <p className="font-black text-slate-900 text-sm text-left text-left text-left">{(Number(l.km || 0)).toLocaleString()} KM</p>
-                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-emerald-600 text-left text-left text-left">€{l.cost}</p>
+                                                    <div className="flex items-center gap-2 text-left text-left text-left">
+                                                        <div className="text-right text-slate-900 text-left text-left text-left text-slate-900">
+                                                            <p className="font-black text-slate-900 text-sm">{(Number(l.km || 0)).toLocaleString()} KM</p>
+                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-emerald-600">€{l.cost}</p>
                                                         </div>
-                                                        <button onClick={() => { setEditingLog({ ...l, items: l.items || [''] }); setView('editLog'); }} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center text-center"><Icon name="Edit" size={16}/></button>
-                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-red-400 text-center text-center"><Icon name="Trash2" size={18}/></button>
+                                                        <button onClick={() => { setEditingLog({ ...l, items: l.items || [''] }); setView('editLog'); }} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center"><Icon name="Edit" size={16}/></button>
+                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-red-400 text-center"><Icon name="Trash2" size={18}/></button>
                                                     </div>
                                                 </div>
+                                                {/* Dettagli dell'intervento (Lista puntata) */}
                                                 {l.items && l.items.length > 0 && (
-                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left text-left text-left text-left">
+                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left text-left">
                                                         {l.items.filter(i => i && String(i).trim() !== "").map((item, idx) => (
-                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left text-left text-left text-left text-left">
-                                                                <span className="text-orange-500 mt-1 text-left text-left text-left text-left">•</span> {String(item)}
+                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left text-left text-left">
+                                                                <span className="text-orange-500 mt-1 text-left text-left">•</span> {String(item)}
                                                             </div>
                                                         ))}
                                                     </div>
                                                 )}
                                                 {l.docLink && (
-                                                    <button onClick={() => window.open(l.docLink, '_blank')} className="w-full mt-3 bg-slate-100 text-slate-600 p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 transition-all text-center text-center">
+                                                    <button onClick={() => window.open(l.docLink, '_blank')} className="w-full mt-3 bg-slate-100 text-slate-600 p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 transition-all text-center text-center text-center">
                                                         <Icon name="ExternalLink" size={14}/> Apri Documento PDF
                                                     </button>
                                                 )}
@@ -639,19 +642,19 @@
                             )}
 
                             {view === 'admin' && session?.role === 'admin' && (
-                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left text-left text-left text-left text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none text-left text-left text-left">Admin Panel</h2>
+                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none text-left text-left">Admin Panel</h2>
                                     
                                     <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'} text-left text-left`}>
                                         <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left text-left text-left">
                                             <Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> 
                                             {editingUser ? `Modifica: ${String(editingUser.email)}` : "Registra Nuovo Cliente"}
                                         </h3>
-                                        <div className="space-y-1 text-left text-slate-300 text-left text-left text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left">Email Account</label>
-                                            <input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left text-left text-left" value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} />
+                                        <div className="space-y-1 text-left text-slate-300 text-left text-left">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left">Email Account</label>
+                                            <input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left" value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} />
                                         </div>
-                                        <div className="space-y-1 text-left text-slate-300 text-left text-left text-left text-left">
+                                        <div className="space-y-1 text-left text-slate-300 text-left text-left text-left">
                                             <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left text-left text-left">Password</label>
                                             <input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left text-left text-left text-left" value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
                                         </div>
@@ -664,34 +667,74 @@
                                         </div>
                                         <div className="flex gap-2 text-white text-left text-left text-left">
                                             <button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg btn-active text-center text-center text-center text-center text-center"> {editingUser ? "Salva" : "Crea"} </button>
-                                            {editingUser && <button onClick={() => {setEditingUser(null); setNewUserForm({email:'', password:'', role:'user'});}} className="bg-slate-700 text-white px-6 rounded-2xl font-black uppercase shadow-lg text-center text-center text-center text-center text-center text-center">X</button>}
+                                            {editingUser && <button onClick={() => {setEditingUser(null); setNewUserForm({email:'', password:'', role:'user'});}} className="bg-slate-700 text-white px-6 rounded-2xl font-black uppercase shadow-lg text-center text-center text-center text-center text-center text-center text-center">X</button>}
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4 text-left text-left text-left text-left text-left">
-                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left text-left text-left text-left text-left">Gestione Account</h3>
-                                        <div className="grid gap-3 text-left text-left text-left text-left text-left text-left">
+                                    <div className="space-y-4 text-left text-left text-left">
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left text-left text-left">Gestione Account</h3>
+                                        <div className="grid gap-3 text-left text-left text-left text-left text-left">
                                             {allUsers.map(u => {
                                                 const showPass = showPassMap[u.id];
                                                 return (
-                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left text-left text-left text-left text-left text-left">
-                                                        <div className="flex flex-col gap-1 text-left text-slate-900 text-left text-left text-left">
+                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left text-left text-left text-left text-left">
+                                                        <div className="flex flex-col gap-1 text-left text-slate-900 text-left text-left">
                                                             <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left text-left text-left text-left text-left text-left">{String(u.email || "")}</p>
-                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left text-left text-left text-left text-left text-left text-left">
                                                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left text-left text-left text-left text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left text-left text-left text-left text-left'}`}>{String(u.role || "user")}</span>
-                                                                <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left text-center text-center text-center text-center text-center"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
-                                                                <span className="text-[9px] text-slate-400 font-black text-left text-left text-left text-left text-left text-left">{showPass ? String(u.password) : '••••••••'}</span>
+                                                                <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left text-center text-center text-center text-center text-center text-center"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
+                                                                <span className="text-[9px] text-slate-400 font-black text-left text-left text-left text-left text-left text-left text-left text-left text-left">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
-                                                        <div className="flex gap-1 text-slate-900 text-left text-left text-left text-left text-left text-left text-left">
-                                                            <button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center text-center text-center text-center text-center"><Icon name="Edit" size={16}/></button>
-                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-red-500 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center"><Icon name="Trash2" size={16}/></button>
+                                                        <div className="flex gap-1 text-slate-900 text-left text-left text-left text-left text-left text-left">
+                                                            <button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center text-center text-center text-center text-center text-center"><Icon name="Edit" size={16}/></button>
+                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-red-500 text-center text-center text-center text-center text-center text-center text-center text-center text-center"><Icon name="Trash2" size={16}/></button>
                                                         </div>
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                     </div>
+                                </div>
+                            )}
+
+                            {/* AGGIUNGI / MODIFICA LOG (UNIFICATO) */}
+                            {(view === 'addLog' || view === 'editLog') && (
+                                <div className="space-y-6 animate-in text-left text-slate-900 text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left text-left text-left">Registra Lavoro</h2>
+                                    <form onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const currentData = view === 'addLog' ? newLog : editingLog;
+                                        const bikePath = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                                        const logToSave = { 
+                                            ...currentData, 
+                                            km: Number(currentData.km), 
+                                            cost: Number(currentData.cost),
+                                            docLink: cryptoUtils.encrypt(currentData.docLink, String(activeBike.userEmail)) 
+                                        };
+                                        if (view === 'addLog') {
+                                            await db.collection(`${bikePath}/logs`).add({ ...logToSave, createdAt: new Date().toISOString() });
+                                        } else {
+                                            await db.doc(`${bikePath}/logs/${editingLog.id}`).update(logToSave);
+                                        }
+                                        if (Number(currentData.km) > (Number(activeBike?.odometer) || 0)) await db.doc(bikePath).update({ odometer: Number(currentData.km) });
+                                        setView('history'); showToast("Salvato!");
+                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left border border-slate-800 text-left text-left text-left">
+                                        <div className="space-y-1 text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left">Tipo Intervento</label><input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.type : editingLog.type} onChange={e => view === 'addLog' ? setNewLog({...newLog, type: e.target.value}) : setEditingLog({...editingLog, type: e.target.value})} placeholder="Es. Tagliando" /></div>
+                                        <div className="space-y-3 pt-2 text-left text-left text-left text-left text-left text-left">
+                                            <div className="flex justify-between items-center text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left text-left">Voci Intervento</label><button type="button" onClick={() => { if(view==='addLog') setNewLog({...newLog, items: [...newLog.items, '']}); else setEditingLog({...editingLog, items: [...editingLog.items, '']}); }} className="text-orange-500 text-[10px] font-black uppercase active:scale-90 text-center text-center text-center text-center text-center text-center text-center text-center">+ Aggiungi</button></div>
+                                            {(view === 'addLog' ? newLog.items : editingLog.items).map((item, idx) => (
+                                                <div key={idx} className="flex gap-2 animate-in text-left text-left text-left text-left text-left text-left text-left"><input required className="flex-1 p-3.5 bg-slate-800 rounded-xl text-white outline-none text-xs border border-slate-700 text-left text-left text-left text-left text-left text-left text-left text-left" value={item} onChange={e => { const u = [...(view==='addLog'?newLog.items:editingLog.items)]; u[idx] = e.target.value; if(view==='addLog') setNewLog({...newLog, items: u}); else setEditingLog({...editingLog, items: u}); }} placeholder={`Voce ${idx+1}`} />{(view==='addLog'?newLog.items:editingLog.items).length > 1 && <button type="button" onClick={() => { const u = [...(view==='addLog'?newLog.items:editingLog.items)]; u.splice(idx,1); if(view==='addLog') setNewLog({...newLog, items: u}); else setEditingLog({...editingLog, items: u}); }} className="text-red-400 p-2 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center"><Icon name="MinusCircle" size={20}/></button>}</div>
+                                            ))}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 pt-2 text-left text-left text-left text-left text-left text-left">
+                                            <div className="space-y-1 text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left">Km</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.km : editingLog.km} onChange={e => view === 'addLog' ? setNewLog({...newLog, km: e.target.value}) : setEditingLog({...editingLog, km: e.target.value})} /></div>
+                                            <div className="space-y-1 text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left text-left">Costo €</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.cost : editingLog.cost} onChange={e => view === 'addLog' ? setNewLog({...newLog, cost: e.target.value}) : setEditingLog({...editingLog, cost: e.target.value})} /></div>
+                                        </div>
+                                        <div className="space-y-1 pt-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">Data</label><input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.date : editingLog.date} onChange={e => view === 'addLog' ? setNewLog({...newLog, date: e.target.value}) : setEditingLog({...editingLog, date: e.target.value})} /></div>
+                                        <div className="space-y-1 pt-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">Link Fattura/PDF</label><input className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-xs text-blue-400 italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.docLink : editingLog.docLink} onChange={e => view === 'addLog' ? setNewLog({...newLog, docLink: e.target.value}) : setEditingLog({...editingLog, docLink: e.target.value})} placeholder="Link Drive/Dropbox..." /></div>
+                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center text-center text-center text-center text-center text-center text-center text-center italic text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">Salva Intervento</button>
+                                    </form>
                                 </div>
                             )}
 
