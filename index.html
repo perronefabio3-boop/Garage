@@ -41,16 +41,18 @@
 
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); }
         
-        /* Fix per l'header appiccicoso nel garage */
+        /* Fix definitivo per l'header appiccicoso nel garage */
         .sticky-garage-header {
             position: sticky;
             top: 0;
-            z-index: 30;
-            background: rgba(241, 245, 249, 0.98);
-            backdrop-filter: blur(10px);
-            margin: -20px -20px 20px -20px;
+            z-index: 40;
+            background: rgba(241, 245, 249, 0.95);
+            backdrop-filter: blur(12px);
             padding: 20px;
-            border-bottom: 1px solid #e2e8f0;
+            margin-left: -20px;
+            margin-right: -20px;
+            margin-top: -20px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
     </style>
 </head>
@@ -74,6 +76,7 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // RULE 1: Sanificazione appId per percorsi Firestore
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
@@ -181,7 +184,7 @@
 
             return (
                 <header className="bg-slate-900 text-white p-5 flex justify-between items-center shadow-lg shrink-0 relative z-50">
-                    <div className="flex items-center gap-3 z-10">
+                    <div className="flex items-center gap-3 z-10 text-left">
                         {(view !== 'garage' && view !== 'login') && (
                             <button onClick={onBack} className="p-2 bg-slate-800 rounded-xl btn-active transition-transform">
                                 <Icon name="ChevronLeft" size={24} className="text-orange-500" />
@@ -232,7 +235,7 @@
         // --- APP LOGIC ---
 
         function App() {
-            const [currentUser, setCurrentUser] = useState(null);
+            const [user, setUser] = useState(null);
             const [session, setSession] = useState(null);
             const [loading, setLoading] = useState(true);
             const [view, setView] = useState('login');
@@ -259,6 +262,9 @@
             const [editingUser, setEditingUser] = useState(null);
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user' });
 
+            const adminLogoRef = useRef(null);
+            const fileInputRef = useRef(null);
+
             // --- DECRIPTAZIONE ---
             const activeBike = useMemo(() => {
                 if (!activeBikeRaw) return null;
@@ -283,14 +289,14 @@
                 return km === 0 ? "0.000" : (totalCostValue / km).toFixed(3);
             }, [activeBike, totalCostValue]);
 
-            // --- FIREBASE SYNC ---
+            // --- FIREBASE SYNC (Regola 3) ---
             useEffect(() => {
                 auth.signInAnonymously();
-                return auth.onAuthStateChanged(u => { setCurrentUser(u); setLoading(false); });
+                return auth.onAuthStateChanged(u => { setUser(u); setLoading(false); });
             }, []);
 
             useEffect(() => {
-                if (!currentUser) return;
+                if (!user) return;
                 const p = `artifacts/${appId}/public/data`;
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
                 const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
@@ -301,21 +307,18 @@
                     setAllUsers(list);
                     if (session?.email) {
                         const curr = list.find(u => u.email.toLowerCase() === session.email.toLowerCase());
-                        if (curr) {
-                            setSession(prev => ({ ...prev, ...curr }));
-                            setProfilePhotoUrl(curr.photoURL || "");
-                        }
+                        if (curr) setSession(prev => ({ ...prev, ...curr }));
                     }
                 });
                 return () => { unsubB(); unsubL(); unsubT(); unsubC(); unsubU(); };
-            }, [currentUser, session?.email]);
+            }, [user, session?.email]);
 
             useEffect(() => {
-                if (!currentUser || !selectedBikeId) return;
+                if (!user || !selectedBikeId) return;
                 return db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).onSnapshot(s => {
                     if (s.exists) setActiveBikeRaw({ ...s.data(), id: s.id });
                 });
-            }, [currentUser, selectedBikeId]);
+            }, [user, selectedBikeId]);
 
             // --- AZIONI ---
             const handleLogin = async (e) => {
@@ -362,7 +365,7 @@
                 const logData = logs.find(l => l.id === logId);
                 if (!logData) return;
                 setModal({
-                    isOpen: true, title: "Sposta nel Cestino", message: "Potrai recuperare questo intervento in seguito.",
+                    isOpen: true, title: "Sposta nel Cestino", message: "L'intervento potrà essere recuperato in seguito.",
                     onConfirm: async () => {
                         await db.collection(`artifacts/${appId}/public/data/trash`).add({
                             ...logData,
@@ -406,7 +409,7 @@
                             {view === 'login' && (
                                 <div className="py-10 space-y-12 text-center animate-in">
                                     <div className="mx-auto w-fit border-2 border-orange-500 rounded-full p-2 shadow-xl"><Icon name="Bike" size={80} className="text-orange-500 m-4"/></div>
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900">Garage Fleet Pro</h2>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center leading-none">Garage Fleet Pro</h2>
                                     <form onSubmit={handleLogin} className="space-y-4 px-4 text-left">
                                         <input required type="email" placeholder="Email Account" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none text-slate-900 shadow-sm" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
                                         <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none text-slate-900 shadow-sm" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
@@ -416,33 +419,33 @@
                             )}
 
                             {view === 'garage' && session && (
-                                <div className="space-y-6 animate-in">
+                                <div className="space-y-6 animate-in text-left">
                                     {/* HEADER GARAGE FISSO */}
-                                    <div className="garage-sticky-top">
-                                        <div className="flex justify-between items-end mb-6">
-                                            <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">Lista Veicoli</p></div>
+                                    <div className="sticky-garage-header text-left">
+                                        <div className="flex justify-between items-end mb-6 text-left">
+                                            <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">I Tuoi Mezzi</p></div>
                                             <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg active:scale-95 transition-transform"><Icon name="Plus" size={24}/></button>
                                         </div>
-                                        <div className="relative">
+                                        <div className="relative text-left">
                                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="Search" size={18} /></div>
                                             <input className="w-full bg-white border-2 border-slate-100 focus:border-orange-200 rounded-2xl p-4 pl-12 font-bold outline-none text-sm shadow-sm text-slate-900" placeholder="Cerca modello, targa o email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                                         </div>
                                     </div>
-                                    <div className="grid gap-4">
+                                    <div className="grid gap-4 text-left">
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
                                             return (
                                                 <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group active:scale-[0.98]">
                                                     <div className="text-left text-slate-900">
-                                                        <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2">{String(b.model || "")}</h3>
-                                                        <div className="flex flex-col gap-1">
+                                                        <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
+                                                        <div className="flex flex-col gap-1 text-left">
                                                             {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit">{String(b.targa)}</span>}
-                                                            {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase">{String(b.userEmail)}</p>}
+                                                            {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
                                                         </div>
-                                                        <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
+                                                        <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
                                                         <div className="flex flex-wrap gap-1 mt-2">
                                                             {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
-                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
+                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
                                                         </div>
                                                     </div>
                                                     <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
@@ -454,11 +457,11 @@
                             )}
 
                             {view === 'dashboard' && activeBike && (
-                                <div className="space-y-6 animate-in text-left">
+                                <div className="space-y-6 animate-in text-left text-slate-900">
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left border-4 border-slate-800">
-                                        <div className="relative z-10 text-white">
+                                        <div className="relative z-10 text-white text-left">
                                             <h2 className="text-3xl font-black uppercase tracking-tight mb-2 truncate italic leading-none">{String(activeBike.model || "")}</h2>
-                                            <div className="flex items-baseline gap-2 opacity-80 pt-2">
+                                            <div className="flex items-baseline gap-2 opacity-80 pt-2 text-white">
                                                 <span className="text-2xl font-bold tabular-nums">{(Number(activeBike.odometer) || 0).toLocaleString()}</span>
                                                 <span className="text-orange-500 font-black text-[10px] tracking-[0.2em] uppercase leading-none">Km Totali</span>
                                             </div>
@@ -467,7 +470,7 @@
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-slate-900">
                                         <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400">Costo / KM</span></div><p className="text-xl font-black">€ {costPerKm}</p></div>
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400">Totale Spesa</span></div><p className="text-xl font-black">€ {totalCostValue.toLocaleString()}</p></div>
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Totale Spesa</span></div><p className="text-xl font-black text-left">€ {totalCostValue.toLocaleString()}</p></div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-slate-900">
                                         <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform active:scale-95 shadow-lg"><Icon name="History" className="text-slate-400" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Cronologia</span></button>
@@ -483,17 +486,17 @@
                                         <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-none uppercase italic">Registro</h2>
                                         <button onClick={() => setView('trash')} className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg active:scale-90"><Icon name="Trash2" size={20}/></button>
                                     </div>
-                                    <div className="space-y-5 text-left">
+                                    <div className="space-y-5 text-left text-slate-900">
                                         {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px]">Nessun log trovato</p> : logs.map(l => (
                                             <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2">
-                                                <div className="flex justify-between items-start text-left">
+                                                <div className="flex justify-between items-start text-left text-slate-900">
                                                     <div className="text-left space-y-1">
                                                         <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase">{String(l.category)}</span>
                                                         <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1">{String(l.type)}</h4>
                                                         <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="text-right text-slate-900">
+                                                        <div className="text-right text-slate-900 text-left">
                                                             <p className="font-black text-slate-900 text-sm">{(Number(l.km || 0)).toLocaleString()} KM</p>
                                                             <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right">€{l.cost}</p>
                                                         </div>
@@ -511,12 +514,12 @@
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none">Admin Panel</h2>
                                     <div className="space-y-4 text-left">
                                         <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Utenti Registrati</h3>
-                                        <div className="grid gap-3">
+                                        <div className="grid gap-3 text-left">
                                             {allUsers.map(u => {
                                                 const showPass = showPassMap[u.id];
                                                 return (
                                                     <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900">
-                                                        <div className="flex flex-col gap-1 text-left">
+                                                        <div className="flex flex-col gap-1 text-left text-slate-900">
                                                             <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left">{String(u.email || "")}</p>
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>{String(u.role || "user")}</span>
@@ -524,7 +527,7 @@
                                                                 <span className="text-[9px] text-slate-400 font-black">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
-                                                        <div className="flex gap-1">
+                                                        <div className="flex gap-1 text-slate-900">
                                                             <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90"><Icon name="Trash2" size={16}/></button>
                                                         </div>
                                                     </div>
@@ -537,7 +540,7 @@
 
                             {view === 'profile' && session && (
                                 <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-center">
-                                    <div className="mx-auto w-fit relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
+                                    <div className="mx-auto w-fit relative group cursor-pointer text-center" onClick={() => fileInputRef.current.click()}>
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
                                             const file = e.target.files[0];
                                             if (file) {
@@ -549,8 +552,8 @@
                                         <UserAvatar size={150} url={profilePhotoUrl} />
                                         <div className="absolute bottom-0 right-0 bg-orange-500 text-white p-3 rounded-full shadow-lg border-4 border-white"><Icon name="Edit" size={20}/></div>
                                     </div>
-                                    <h2 className="text-2xl font-black uppercase italic text-slate-900">{String(session.email)}</h2>
-                                    <form onSubmit={handleUpdateProfile} className="space-y-4 pt-6">
+                                    <h2 className="text-2xl font-black uppercase italic text-slate-900 text-center">{String(session.email)}</h2>
+                                    <form onSubmit={handleUpdateProfile} className="space-y-4 pt-6 text-center">
                                         <input className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-orange-500 text-slate-900" placeholder="Incolla URL foto profilo" value={profilePhotoUrl} onChange={e => setProfilePhotoUrl(e.target.value)} />
                                         <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 italic">Salva Profilo</button>
                                     </form>
