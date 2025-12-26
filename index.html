@@ -44,7 +44,7 @@
         /* Fix definitivo per l'header del garage bloccato durante lo scroll */
         .sticky-garage-header {
             position: sticky;
-            top: -20px; /* Compensa esattamente il padding-top: 20px (p-5) del contenitore main */
+            top: -20px;
             z-index: 40;
             background: rgba(241, 245, 249, 0.98);
             backdrop-filter: blur(12px);
@@ -77,7 +77,7 @@
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
-        const APP_VERSION = "1.0.2"; // Incrementata versione dopo il fix dello sticky header
+        const APP_VERSION = "1.0.6"; // Risolto crash Cestino e ordine dati
 
         const SECRET_KEY = "GarageSnoopyPass2025!"; 
         const ENC_PREFIX = "ENC_";
@@ -102,7 +102,7 @@
             }
         };
 
-        // --- COMPONENTI UI DI SUPPORTO (DEFINITI PRIMA PER EVITARE REFERENCE ERRORS) ---
+        // --- COMPONENTI UI DI SUPPORTO ---
 
         function Icon({ name, size = 24, className = "" }) {
             const icons = {
@@ -121,11 +121,12 @@
                 TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
                 RotateCcw: <><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>,
                 Eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
-                EyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-672-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
+                EyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
                 Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
-                Search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+                Search: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="21" y1="21" y2="16.65"/></>,
                 Edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
                 ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="14" x2="21" y2="3"/></>,
+                Save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>,
                 ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
                 CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
                 ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
@@ -158,9 +159,9 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in fade-in text-center">
-                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6">
+                    <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-slate-900">
                         <div className="space-y-2">
-                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">{String(title)}</h3>
+                            <h3 className="text-xl font-black uppercase italic tracking-tighter">{String(title)}</h3>
                             <p className="text-sm text-slate-500 font-medium">{String(message)}</p>
                         </div>
                         <div className="flex flex-col gap-2">
@@ -251,20 +252,19 @@
             const [bikes, setBikes] = useState([]);
             const [selectedBikeId, setSelectedBikeId] = useState(null);
             const [activeBikeRaw, setActiveBikeRaw] = useState(null);
-            const [allLogsRaw, setAllLogsRaw] = useState([]);
+            const [logsRaw, setLogsRaw] = useState([]);
             const [trashLogsRaw, setTrashLogsRaw] = useState([]);
             const [allUsers, setAllUsers] = useState([]);
 
             const [loginForm, setLoginForm] = useState({ email: '', password: '' });
             const [newBike, setNewBike] = useState({ model: '', targa: '', odometer: '', lastServiceKm: '', bolloDeadline: '', assicurazioneDeadline: '', revisioneDeadline: '', bolloNum: '', assicurazioneNum: '', revisioneNum: '', bolloLink: '', assicurazioneLink: '', revisioneLink: '' });
-            const [newLog, setNewLog] = useState({ type: '', items: [''], km: '', date: new Date().toISOString().split('T')[0], cost: '', category: 'Manutenzione', docLink: '' });
+            const [newUserForm, setNewUserForm] = useState({ email: '', password: '', role: 'user' });
+            const [editingUser, setEditingUser] = useState(null);
             
             const [appSettings, setAppSettings] = useState({ logoURL: "" });
             const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
             const [updateStatus, setUpdateStatus] = useState("");
             const [showPassMap, setShowPassMap] = useState({});
-            const [editingUser, setEditingUser] = useState(null);
-            const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user' });
 
             const adminLogoRef = useRef(null);
             const fileInputRef = useRef(null);
@@ -280,11 +280,14 @@
             }, [activeBikeRaw]);
 
             const logs = useMemo(() => {
-                return (allLogsRaw || []).filter(l => l.bikeId === selectedBikeId).map(l => ({ 
+                return (logsRaw || []).map(l => ({ 
                     ...l, 
-                    docLink: cryptoUtils.decrypt(l.docLink)
+                    docLink: cryptoUtils.decrypt(l.docLink),
+                    type: String(l.type || ""),
+                    category: String(l.category || "Manutenzione"),
+                    cost: String(l.cost || "0")
                 })).sort((a,b) => new Date(b.date) - new Date(a.date));
-            }, [allLogsRaw, selectedBikeId]);
+            }, [logsRaw]);
 
             const trashLogs = useMemo(() => {
                 return (trashLogsRaw || []).map(l => ({ 
@@ -301,7 +304,7 @@
                 return km === 0 ? "0.000" : (totalCostValue / km).toFixed(3);
             }, [activeBike, totalCostValue]);
 
-            // --- FIREBASE SYNC (Regola 3) ---
+            // --- FIREBASE SYNC ---
             useEffect(() => {
                 auth.signInAnonymously();
                 return auth.onAuthStateChanged(u => { setCurrentUser(u); setLoading(false); });
@@ -312,8 +315,11 @@
                 const p = `artifacts/${appId}/public/data`;
                 
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-                const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-                const unsubT = db.collection(`${p}/trash`).onSnapshot(s => setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
+                const unsubT = db.collection(`${p}/trash`).onSnapshot(s => {
+                    // FIX: Parentesi corretta per evitare il TypeError sort di undefined
+                    const list = s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+                    setTrashLogsRaw(list);
+                });
                 const unsubC = db.doc(`${p}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
                 const unsubU = db.collection(`${p}/users`).onSnapshot(s => {
                     const list = s.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -323,14 +329,22 @@
                         if (curr) setSession(prev => ({ ...prev, ...curr }));
                     }
                 });
-                return () => { unsubB(); unsubL(); unsubT(); unsubC(); unsubU(); };
+                return () => { unsubB(); unsubT(); unsubC(); unsubU(); };
             }, [currentUser, session?.email]);
 
             useEffect(() => {
                 if (!currentUser || !selectedBikeId) return;
-                return db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).onSnapshot(s => {
+                const bikePath = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                
+                const unsubB = db.doc(bikePath).onSnapshot(s => {
                     if (s.exists) setActiveBikeRaw({ ...s.data(), id: s.id });
                 });
+                
+                const unsubL = db.collection(`${bikePath}/logs`).onSnapshot(s => {
+                    setLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id })));
+                });
+                
+                return () => { unsubB(); unsubL(); };
             }, [currentUser, selectedBikeId]);
 
             // --- AZIONI ---
@@ -364,16 +378,6 @@
                 return list;
             }, [bikes, session, searchQuery]);
 
-            const handleUpdateProfile = async (e) => {
-                e.preventDefault();
-                if (!session?.id) return;
-                try {
-                    await db.doc(`artifacts/${appId}/public/data/users/${session.id}`).update({ photoURL: profilePhotoUrl });
-                    showToast("Profilo salvato!");
-                    setTimeout(() => setView('garage'), 1500);
-                } catch (err) { showToast("Errore salvataggio", "error"); }
-            };
-
             const handleSoftDeleteLog = (logId, bikeId) => {
                 const logData = logs.find(l => l.id === logId);
                 if (!logData) return;
@@ -387,11 +391,31 @@
                             originalBikeModel: String(activeBike.model),
                             deletedAt: new Date().toISOString()
                         });
-                        await db.doc(`artifacts/${appId}/public/data/logs/${logId}`).delete();
+                        await db.doc(`artifacts/${appId}/public/data/bikes/${bikeId}/logs/${logId}`).delete();
                         closeModal(); showToast("Spostato");
                     },
                     onCancel: closeModal
                 });
+            };
+
+            const handleSaveUser = async (e) => {
+                e.preventDefault();
+                const bPath = `artifacts/${appId}/public/data/users`;
+                try {
+                    if (editingUser) {
+                        await db.doc(`${bPath}/${editingUser.id}`).update(newUserForm);
+                        setEditingUser(null);
+                    } else {
+                        await db.collection(bPath).add({ ...newUserForm, createdAt: new Date().toISOString() });
+                    }
+                    setNewUserForm({ email: '', password: '', role: 'user' });
+                    showToast("Salvataggio completato");
+                } catch (err) { showToast("Errore salvataggio", "error"); }
+            };
+
+            const startEditUser = (u) => {
+                setEditingUser(u);
+                setNewUserForm({ email: u.email, password: u.password, role: u.role || 'user' });
             };
 
             const getBikeDeadlines = (bike) => {
@@ -411,31 +435,23 @@
                 return deadlines;
             };
 
-            const processFile = (file, callback) => {
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => { callback(event.target.result); };
-                    reader.readAsDataURL(file);
-                }
-            };
-
             if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-orange-500 font-bold animate-pulse uppercase tracking-widest text-center">Garage Loading...</div>;
 
             return (
                 <div className="min-h-screen bg-slate-100 font-sans text-slate-900 text-left">
-                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left">
+                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left text-slate-900">
                         
                         <Header view={view} setView={setView} onBack={() => { setSelectedBikeId(null); setView('garage'); }} session={session} onLogout={handleLogout} appSettings={appSettings} />
 
                         <main className="flex-1 overflow-y-auto p-5 pb-40 hide-scrollbar text-left text-slate-900">
                             {view === 'login' && (
-                                <div className="py-10 space-y-12 text-center animate-in">
-                                    <div className="mx-auto w-fit border-2 border-orange-500 rounded-full p-2 shadow-xl shadow-orange-500/10 animate-bounce-slow"><AppLogo size={140} url={appSettings?.logoURL} /></div>
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center leading-none">Garage Fleet Pro</h2>
+                                <div className="py-10 space-y-12 text-center animate-in text-center">
+                                    <div className="mx-auto w-fit border-2 border-orange-500 rounded-full p-2 shadow-xl shadow-orange-500/10 animate-bounce-slow text-center"><AppLogo size={140} url={appSettings?.logoURL} /></div>
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center leading-none text-center">Garage Fleet Pro</h2>
                                     <form onSubmit={handleLogin} className="space-y-4 px-4 text-left">
                                         <input required type="email" placeholder="Email Account" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none text-slate-900 shadow-sm" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
                                         <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none text-slate-900 shadow-sm" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
-                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 transition-all italic">Accedi</button>
+                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 transition-all italic text-center">Accedi</button>
                                     </form>
                                 </div>
                             )}
@@ -443,7 +459,7 @@
                             {view === 'garage' && session && (
                                 <div className="space-y-6 animate-in text-left">
                                     {/* HEADER GARAGE FISSO */}
-                                    <div className="garage-fixed-header text-left">
+                                    <div className="sticky-garage-header text-left">
                                         <div className="flex justify-between items-end mb-6 text-left">
                                             <div className="text-left text-slate-900">
                                                 <h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2>
@@ -457,7 +473,6 @@
                                         </div>
                                     </div>
                                     
-                                    {/* LISTA VEICOLI SCORREVOLE */}
                                     <div className="grid gap-4 text-left">
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
@@ -472,7 +487,7 @@
                                                         <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
                                                         <div className="flex flex-wrap gap-1 mt-2 text-left">
                                                             {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
-                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
+                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left text-left text-emerald-500"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1 text-emerald-500" /> In Regola</span>}
                                                         </div>
                                                     </div>
                                                     <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
@@ -486,60 +501,59 @@
                             {view === 'dashboard' && activeBike && (
                                 <div className="space-y-6 animate-in text-left text-slate-900 text-left">
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl overflow-hidden relative border border-slate-800 text-left text-white text-left">
-                                        <div className="relative z-10 text-white text-left">
-                                            <h2 className="text-3xl font-black uppercase tracking-tight mb-2 truncate italic leading-none text-left">{String(activeBike.model || "")}</h2>
-                                            <div className="flex items-baseline gap-2 opacity-80 pt-2 text-white text-left">
+                                        <div className="relative z-10 text-white text-left text-left">
+                                            <h2 className="text-3xl font-black uppercase tracking-tight mb-2 truncate italic leading-none text-left text-left">{String(activeBike.model || "")}</h2>
+                                            <div className="flex items-baseline gap-2 opacity-80 pt-2 text-white text-left text-left">
                                                 <span className="text-2xl font-bold tabular-nums">{(Number(activeBike.odometer) || 0).toLocaleString()}</span>
-                                                <span className="text-orange-500 font-black text-[10px] tracking-[0.2em] uppercase text-left">Km Totali</span>
+                                                <span className="text-orange-500 font-black text-[10px] tracking-[0.2em] uppercase text-left text-left">Km Totali</span>
                                             </div>
                                         </div>
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left">
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-left"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left">€ {costPerKm}</p></div>
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900 text-left">
-                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Totale Spesa</span></div>
-                                            <p className="text-xl font-black text-left text-left text-left">€ {totalCostValue.toLocaleString()}</p>
+                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left">
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left text-left">€ {costPerKm}</p></div>
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900 text-left text-left">
+                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-slate-400">Totale Spesa</span></div>
+                                            <p className="text-xl font-black text-left text-left text-left text-left">€ {totalCostValue.toLocaleString()}</p>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left text-slate-900 text-left">
+                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left text-left">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left text-slate-900 text-left text-left text-slate-900">
                                             <Icon name="History" className="text-slate-400" size={32} />
-                                            <span className="font-black uppercase text-xs tracking-tighter text-left">Cronologia</span>
+                                            <span className="font-black uppercase text-xs tracking-tighter text-left text-left text-slate-900">Cronologia</span>
                                         </button>
-                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-white text-left text-left">
+                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-white text-left text-left text-left">
                                             <Icon name="Plus" className="text-orange-500" size={32} />
-                                            <span className="font-black uppercase text-xs tracking-tighter text-white text-left text-left">Nuovo Log</span>
+                                            <span className="font-black uppercase text-xs tracking-tighter text-white text-left text-left text-white text-left text-white">Nuovo Log</span>
                                         </button>
                                     </div>
-                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900 text-left text-left"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter text-left">Archivio Documenti Protetti</span></button>
+                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900 text-left text-left text-left"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter text-left text-left text-slate-900">Archivio Documenti Protetti</span></button>
                                 </div>
                             )}
 
                             {view === 'history' && (
-                                <div className="space-y-6 animate-in text-left text-slate-900 text-left">
-                                    <div className="flex justify-between items-center text-left text-slate-900 text-left">
-                                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-none uppercase italic">Registro</h2>
-                                        <button onClick={() => setView('trash')} className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg active:scale-90"><Icon name="Trash2" size={20}/></button>
+                                <div className="space-y-6 animate-in text-left text-slate-900 text-left text-left">
+                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left">
+                                        <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-none uppercase italic text-left">Registro</h2>
+                                        <button onClick={() => setView('trash')} className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg active:scale-90 text-white text-left"><Icon name="Trash2" size={20}/></button>
                                     </div>
-                                    <div className="space-y-5 text-left text-slate-900 text-left">
-                                        {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px]">Nessun log trovato</p> : logs.map(l => (
-                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left">
-                                                <div className="flex justify-between items-start text-left text-slate-900 text-left">
-                                                    <div className="text-left space-y-1">
-                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-left">{String(l.category)}</span>
-                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left">{String(l.type)}</h4>
-                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
+                                    <div className="space-y-5 text-left text-slate-900 text-left text-left">
+                                        {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px] text-center">Nessun log trovato</p> : logs.map(l => (
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left text-left">
+                                                <div className="flex justify-between items-start text-left text-slate-900 text-left text-left">
+                                                    <div className="text-left space-y-1 text-left text-slate-900">
+                                                        <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase text-left">{String(l.category)}</span>
+                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left text-left">{String(l.type)}</h4>
+                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left text-slate-400"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-left text-left text-left">
-                                                        <div className="text-right text-slate-900 text-left text-left text-left">
+                                                    <div className="flex items-center gap-2 text-left text-left text-left text-slate-900">
+                                                        <div className="text-right text-slate-900 text-left text-left text-left text-slate-900">
                                                             <p className="font-black text-slate-900 text-sm">{(Number(l.km || 0)).toLocaleString()} KM</p>
-                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-left">€{l.cost}</p>
+                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-emerald-600">€{l.cost}</p>
                                                         </div>
-                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-left"><Icon name="Trash2" size={18}/></button>
+                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-red-400"><Icon name="Trash2" size={18}/></button>
                                                     </div>
                                                 </div>
-                                                {/* Dettagli dell'intervento (Lista puntata) - RIPRISTINATI */}
                                                 {l.items && l.items.length > 0 && (
                                                     <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left text-left">
                                                         {l.items.filter(i => i && String(i).trim() !== "").map((item, idx) => (
@@ -556,10 +570,37 @@
                             )}
 
                             {view === 'admin' && session?.role === 'admin' && (
-                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none">Admin Panel</h2>
+                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none text-left">Admin Panel</h2>
+                                    
+                                    <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'}`}>
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2">
+                                            <Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> 
+                                            {editingUser ? `Modifica: ${String(editingUser.email)}` : "Registra Nuovo Cliente"}
+                                        </h3>
+                                        <div className="space-y-1 text-left text-slate-300">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Email Account</label>
+                                            <input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} />
+                                        </div>
+                                        <div className="space-y-1 text-left text-slate-300">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Password</label>
+                                            <input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
+                                        </div>
+                                        <div className="space-y-1 text-left text-slate-300">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Ruolo</label>
+                                            <select className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold" value={newUserForm.role} onChange={e => setNewUserForm({...newUserForm, role: e.target.value})}>
+                                                <option value="user">Cliente</option>
+                                                <option value="admin">Amministratore</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex gap-2 text-white">
+                                            <button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg btn-active text-center"> {editingUser ? "Salva" : "Crea"} </button>
+                                            {editingUser && <button onClick={() => {setEditingUser(null); setNewUserForm({email:'', password:'', role:'user'});}} className="bg-slate-700 text-white px-6 rounded-2xl font-black uppercase shadow-lg text-center">X</button>}
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-4 text-left">
-                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left">Utenti Registrati</h3>
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left">Gestione Account</h3>
                                         <div className="grid gap-3 text-left">
                                             {allUsers.map(u => {
                                                 const showPass = showPassMap[u.id];
@@ -567,14 +608,15 @@
                                                     <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left text-left">
                                                         <div className="flex flex-col gap-1 text-left text-slate-900">
                                                             <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left">{String(u.email || "")}</p>
-                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left">
+                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left text-left">
                                                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{String(u.role || "user")}</span>
                                                                 <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
                                                                 <span className="text-[9px] text-slate-400 font-black text-left">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
-                                                        <div className="flex gap-1 text-slate-900">
-                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-left text-slate-900"><Icon name="Trash2" size={16}/></button>
+                                                        <div className="flex gap-1 text-slate-900 text-left text-left">
+                                                            <button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center"><Icon name="Edit" size={16}/></button>
+                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-red-500 text-center"><Icon name="Trash2" size={16}/></button>
                                                         </div>
                                                     </div>
                                                 );
@@ -584,32 +626,10 @@
                                 </div>
                             )}
 
-                            {view === 'profile' && session && (
-                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-center">
-                                    <div className="mx-auto w-fit relative group cursor-pointer text-center text-center" onClick={() => fileInputRef.current.click()}>
-                                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                const reader = new FileReader();
-                                                reader.onload = (ev) => setProfilePhotoUrl(ev.target.result);
-                                                reader.readAsDataURL(file);
-                                            }
-                                        }} />
-                                        <UserAvatar size={150} url={profilePhotoUrl} />
-                                        <div className="absolute bottom-0 right-0 bg-orange-500 text-white p-3 rounded-full shadow-lg border-4 border-white text-center"><Icon name="Edit" size={20}/></div>
-                                    </div>
-                                    <h2 className="text-2xl font-black uppercase italic text-slate-900 text-center text-center">{String(session.email)}</h2>
-                                    <form onSubmit={handleUpdateProfile} className="space-y-4 pt-6 text-center text-center">
-                                        <input className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-orange-500 text-slate-900 text-left" placeholder="Incolla URL foto profilo" value={profilePhotoUrl} onChange={e => setProfilePhotoUrl(e.target.value)} />
-                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 italic text-white italic text-center">Salva Profilo</button>
-                                    </form>
-                                </div>
-                            )}
-
                         </main>
 
                         <BottomNav view={view} setView={setView} activeBike={activeBike} />
-                        {updateStatus && <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-50 animate-in slide-in-from-bottom-4 flex items-center gap-2 text-left"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse text-left" /> {String(updateStatus)}</div>}
+                        {updateStatus && <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-50 animate-in slide-in-from-bottom-4 flex items-center gap-2 text-left text-white text-left"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse text-left text-left" /> {String(updateStatus)}</div>}
                     </div>
                 </div>
             );
