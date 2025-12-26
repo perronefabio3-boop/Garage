@@ -79,6 +79,7 @@
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
+        const APP_VERSION = "1.0.1"; // Identificativo versione per tracciare i caricamenti online
 
         const SECRET_KEY = "GarageSnoopyPass2025!"; 
         const ENC_PREFIX = "ENC_";
@@ -200,6 +201,12 @@
                     </div>
                     <div className="flex items-center gap-2 z-10">
                         {isAdminHeader && (
+                            <div className="flex flex-col items-end mr-1">
+                                <span className="text-[7px] font-black text-orange-500 uppercase leading-none opacity-70">Build</span>
+                                <span className="text-[9px] font-bold text-slate-400 leading-none">{APP_VERSION}</span>
+                            </div>
+                        )}
+                        {isAdminHeader && (
                             <button onClick={() => setView('admin')} className={`p-2 rounded-xl transition-all ${view === 'admin' ? 'bg-blue-600 shadow-lg' : 'bg-slate-800'}`}>
                                 <Icon name="Shield" size={20} />
                             </button>
@@ -214,7 +221,7 @@
             const hiddenViews = ['admin', 'addBike', 'editBike', 'login', 'addLog', 'editLog', 'documents', 'trash', 'profile'];
             if (!activeBike || hiddenViews.includes(view)) return null;
             return (
-                <nav className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-8 md:p-4 max-w-md mx-auto rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.12)] z-40">
+                <nav className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-3 pb-8 md:p-4 max-w-md mx-auto rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.12)] z-40 text-slate-900">
                     <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1.5 transition-all ${view === 'dashboard' ? 'text-orange-500 scale-110' : 'text-slate-400 opacity-60'}`}>
                         <Icon name="Gauge" size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Stato</span>
                     </button>
@@ -305,7 +312,6 @@
             useEffect(() => {
                 if (!currentUser) return;
                 const p = `artifacts/${appId}/public/data`;
-                
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
                 const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
                 const unsubT = db.collection(`${p}/trash`).onSnapshot(s => setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
@@ -382,10 +388,9 @@
                             originalBikeModel: String(activeBike.model),
                             deletedAt: new Date().toISOString()
                         });
-                        await db.doc(`artifacts/${appId}/public/data/logs/${logId}`).delete();
-                        closeModal(); showToast("Spostato");
-                    },
-                    onCancel: closeModal
+                        await db.doc(`artifacts/${appId}/public/data/bikes/${bikeId}/logs/${logId}`).delete();
+                        closeModal(); showToast("Spostato nel cestino");
+                    }
                 });
             };
 
@@ -442,12 +447,12 @@
                                         <div className="flex justify-between items-end mb-6 text-left">
                                             <div className="text-left text-slate-900">
                                                 <h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2>
-                                                <p className="text-slate-400 text-[10px] font-black uppercase mt-2">I Tuoi Mezzi</p>
+                                                <p className="text-slate-400 text-[10px] font-black uppercase mt-2 text-left">I Tuoi Mezzi</p>
                                             </div>
                                             <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg active:scale-95 transition-transform"><Icon name="Plus" size={24}/></button>
                                         </div>
                                         <div className="relative text-left">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="Search" size={18} /></div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-left"><Icon name="Search" size={18} /></div>
                                             <input className="w-full bg-white border-2 border-slate-100 focus:border-orange-200 rounded-2xl p-4 pl-12 font-bold outline-none text-sm shadow-sm text-slate-900" placeholder="Cerca modello, targa o email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                                         </div>
                                     </div>
@@ -458,21 +463,19 @@
                                             const dls = getBikeDeadlines(b);
                                             return (
                                                 <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group active:scale-[0.98] text-left">
-                                                    <div className="flex justify-between items-start relative z-10 text-slate-900 text-left">
-                                                        <div className="text-left">
-                                                            <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
-                                                            <div className="flex flex-col gap-1 text-left">
-                                                                {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit text-left">{String(b.targa)}</span>}
-                                                                {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
-                                                            </div>
-                                                            <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
-                                                            <div className="flex flex-wrap gap-1 mt-2 text-left">
-                                                                {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
-                                                                {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
-                                                            </div>
+                                                    <div className="text-left text-slate-900">
+                                                        <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
+                                                        <div className="flex flex-col gap-1 text-left">
+                                                            {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit text-left">{String(b.targa)}</span>}
+                                                            {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
                                                         </div>
-                                                        <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
+                                                        <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
+                                                        <div className="flex flex-wrap gap-1 mt-2 text-left">
+                                                            {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
+                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
+                                                        </div>
                                                     </div>
+                                                    <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
                                                 </div>
                                             );
                                         })}
@@ -485,7 +488,7 @@
                                     <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl overflow-hidden relative border border-slate-800 text-left text-white text-left">
                                         <div className="relative z-10 text-white text-left">
                                             <h2 className="text-3xl font-black uppercase tracking-tight mb-2 truncate italic leading-none text-left">{String(activeBike.model || "")}</h2>
-                                            <div className="flex items-baseline gap-2 opacity-80 pt-2 text-white">
+                                            <div className="flex items-baseline gap-2 opacity-80 pt-2 text-white text-left">
                                                 <span className="text-2xl font-bold tabular-nums">{(Number(activeBike.odometer) || 0).toLocaleString()}</span>
                                                 <span className="text-orange-500 font-black text-[10px] tracking-[0.2em] uppercase text-left">Km Totali</span>
                                             </div>
@@ -493,52 +496,52 @@
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-slate-900 text-left">
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-left"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Costo / KM</span></div><p className="text-xl font-black text-left">€ {costPerKm}</p></div>
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900">
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-left"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left">€ {costPerKm}</p></div>
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900 text-left">
                                             <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Totale Spesa</span></div>
                                             <p className="text-xl font-black text-left text-left text-left">€ {totalCostValue.toLocaleString()}</p>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left text-slate-900">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left text-slate-900 text-left">
                                             <Icon name="History" className="text-slate-400" size={32} />
                                             <span className="font-black uppercase text-xs tracking-tighter text-left">Cronologia</span>
                                         </button>
-                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-white text-left">
+                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-white text-left text-left">
                                             <Icon name="Plus" className="text-orange-500" size={32} />
                                             <span className="font-black uppercase text-xs tracking-tighter text-white text-left text-left">Nuovo Log</span>
                                         </button>
                                     </div>
-                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter">Archivio Documenti Protetti</span></button>
+                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900 text-left text-left"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter text-left">Archivio Documenti Protetti</span></button>
                                 </div>
                             )}
 
                             {view === 'history' && (
-                                <div className="space-y-6 animate-in text-left text-slate-900">
-                                    <div className="flex justify-between items-center text-left text-slate-900">
+                                <div className="space-y-6 animate-in text-left text-slate-900 text-left">
+                                    <div className="flex justify-between items-center text-left text-slate-900 text-left">
                                         <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-none uppercase italic">Registro</h2>
                                         <button onClick={() => setView('trash')} className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg active:scale-90"><Icon name="Trash2" size={20}/></button>
                                     </div>
-                                    <div className="space-y-5 text-left text-slate-900">
+                                    <div className="space-y-5 text-left text-slate-900 text-left">
                                         {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px]">Nessun log trovato</p> : logs.map(l => (
-                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2">
-                                                <div className="flex justify-between items-start text-left text-slate-900">
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left">
+                                                <div className="flex justify-between items-start text-left text-slate-900 text-left">
                                                     <div className="text-left space-y-1">
-                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase">{String(l.category)}</span>
-                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1">{String(l.type)}</h4>
-                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
+                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-left">{String(l.category)}</span>
+                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left">{String(l.type)}</h4>
+                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="text-right text-slate-900 text-left text-slate-900">
+                                                    <div className="flex items-center gap-2 text-left text-left">
+                                                        <div className="text-right text-slate-900 text-left text-left text-left">
                                                             <p className="font-black text-slate-900 text-sm">{(Number(l.km || 0)).toLocaleString()} KM</p>
-                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right">€{l.cost}</p>
+                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left">€{l.cost}</p>
                                                         </div>
-                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90"><Icon name="Trash2" size={18}/></button>
+                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left"><Icon name="Trash2" size={18}/></button>
                                                     </div>
                                                 </div>
                                                 {/* Dettagli dell'intervento (Lista puntata) */}
                                                 {l.items && l.items.length > 0 && (
-                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left">
+                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left">
                                                         {l.items.filter(i => i && String(i).trim() !== "").map((item, idx) => (
                                                             <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left">
                                                                 <span className="text-orange-500 mt-1">•</span> {String(item)}
@@ -561,13 +564,13 @@
                                             {allUsers.map(u => {
                                                 const showPass = showPassMap[u.id];
                                                 return (
-                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left">
+                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left text-left">
                                                         <div className="flex flex-col gap-1 text-left text-slate-900">
                                                             <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left">{String(u.email || "")}</p>
-                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left">
+                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left">
                                                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{String(u.role || "user")}</span>
-                                                                <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
-                                                                <span className="text-[9px] text-slate-400 font-black">{showPass ? String(u.password) : '••••••••'}</span>
+                                                                <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
+                                                                <span className="text-[9px] text-slate-400 font-black text-left">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-1 text-slate-900">
@@ -583,7 +586,7 @@
 
                             {view === 'profile' && session && (
                                 <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-center">
-                                    <div className="mx-auto w-fit relative group cursor-pointer text-center" onClick={() => fileInputRef.current.click()}>
+                                    <div className="mx-auto w-fit relative group cursor-pointer text-center text-center" onClick={() => fileInputRef.current.click()}>
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
                                             const file = e.target.files[0];
                                             if (file) {
@@ -593,12 +596,12 @@
                                             }
                                         }} />
                                         <UserAvatar size={150} url={profilePhotoUrl} />
-                                        <div className="absolute bottom-0 right-0 bg-orange-500 text-white p-3 rounded-full shadow-lg border-4 border-white"><Icon name="Edit" size={20}/></div>
+                                        <div className="absolute bottom-0 right-0 bg-orange-500 text-white p-3 rounded-full shadow-lg border-4 border-white text-center"><Icon name="Edit" size={20}/></div>
                                     </div>
-                                    <h2 className="text-2xl font-black uppercase italic text-slate-900 text-center">{String(session.email)}</h2>
-                                    <form onSubmit={handleUpdateProfile} className="space-y-4 pt-6 text-center">
-                                        <input className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-orange-500 text-slate-900" placeholder="Incolla URL foto profilo" value={profilePhotoUrl} onChange={e => setProfilePhotoUrl(e.target.value)} />
-                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 italic text-white italic">Salva Profilo</button>
+                                    <h2 className="text-2xl font-black uppercase italic text-slate-900 text-center text-center">{String(session.email)}</h2>
+                                    <form onSubmit={handleUpdateProfile} className="space-y-4 pt-6 text-center text-center">
+                                        <input className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-orange-500 text-slate-900 text-left" placeholder="Incolla URL foto profilo" value={profilePhotoUrl} onChange={e => setProfilePhotoUrl(e.target.value)} />
+                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 italic text-white italic text-center">Salva Profilo</button>
                                     </form>
                                 </div>
                             )}
@@ -606,7 +609,7 @@
                         </main>
 
                         <BottomNav view={view} setView={setView} activeBike={activeBike} />
-                        {updateStatus && <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-50 animate-in slide-in-from-bottom-4 flex items-center gap-2"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> {String(updateStatus)}</div>}
+                        {updateStatus && <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-50 animate-in slide-in-from-bottom-4 flex items-center gap-2 text-left"><div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse text-left" /> {String(updateStatus)}</div>}
                     </div>
                 </div>
             );
