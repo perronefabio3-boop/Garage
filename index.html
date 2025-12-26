@@ -41,16 +41,15 @@
 
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); }
         
-        /* Fix per l'header del garage che deve rimanere visibile durante lo scroll */
-        .sticky-garage-header {
+        /* Stile critico per l'header fisso durante lo scroll */
+        .garage-fixed-header {
             position: sticky;
-            top: -20px; /* Compensa il padding del container main */
-            z-index: 30;
-            background: rgba(241, 245, 249, 0.95);
+            top: 0;
+            z-index: 40;
+            background: rgba(241, 245, 249, 0.98);
             backdrop-filter: blur(12px);
-            margin-left: -20px;
-            margin-right: -20px;
-            padding: 20px;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1rem;
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
     </style>
@@ -102,7 +101,7 @@
             }
         };
 
-        // --- COMPONENTI UI (DEFINITI PRIMA PER EVITARE REFERENCE ERRORS) ---
+        // --- COMPONENTI UI DI SUPPORTO (DEFINITI PRIMA PER EVITARE REFERENCE ERRORS) ---
 
         function Icon({ name, size = 24, className = "" }) {
             const icons = {
@@ -126,9 +125,9 @@
                 Search: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="21" y1="21" y2="16.65"/></>,
                 Edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
                 ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="14" x2="21" y2="3"/></>,
-                ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
-                CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
                 ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
+                CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
+                ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
                 CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9" y1="17" x2="15" y2="17"/></>
             };
             return (
@@ -230,7 +229,7 @@
             );
         }
 
-        // --- APP LOGIC ---
+        // --- APP PRINCIPALE ---
 
         function App() {
             const [currentUser, setCurrentUser] = useState(null);
@@ -245,7 +244,7 @@
             const [bikes, setBikes] = useState([]);
             const [selectedBikeId, setSelectedBikeId] = useState(null);
             const [activeBikeRaw, setActiveBikeRaw] = useState(null);
-            const [allLogsRaw, setAllLogsRaw] = useState([]);
+            const [logsRaw, setLogsRaw] = useState([]);
             const [trashLogsRaw, setTrashLogsRaw] = useState([]);
             const [allUsers, setAllUsers] = useState([]);
 
@@ -273,12 +272,24 @@
                 return b;
             }, [activeBikeRaw]);
 
+            // Fix per il caricamento storico: usiamo logsRaw che viene popolato in base alla moto selezionata
             const logs = useMemo(() => {
-                return (allLogsRaw || []).filter(l => l.bikeId === selectedBikeId).map(l => ({ 
+                return (logsRaw || []).map(l => ({ 
                     ...l, 
-                    docLink: cryptoUtils.decrypt(l.docLink)
+                    docLink: cryptoUtils.decrypt(l.docLink),
+                    type: String(l.type || ""),
+                    category: String(l.category || "Manutenzione"),
+                    cost: String(l.cost || "0")
                 })).sort((a,b) => new Date(b.date) - new Date(a.date));
-            }, [allLogsRaw, selectedBikeId]);
+            }, [logsRaw]);
+
+            const trashLogs = useMemo(() => {
+                return (trashLogsRaw || []).map(l => ({ 
+                    ...l, 
+                    docLink: cryptoUtils.decrypt(l.docLink),
+                    originalBikeModel: String(l.originalBikeModel || "N/D")
+                }));
+            }, [trashLogsRaw]);
 
             const totalCostValue = useMemo(() => logs.reduce((sum, log) => sum + (Number(log.cost) || 0), 0), [logs]);
             const costPerKm = useMemo(() => {
@@ -296,10 +307,9 @@
             useEffect(() => {
                 if (!currentUser) return;
                 const p = `artifacts/${appId}/public/data`;
+                
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-                const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-                const unsubT = db.collection(`${p}/trash`).onSnapshot(s => setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-                const unsubC = db.doc(`${p}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
+                
                 const unsubU = db.collection(`${p}/users`).onSnapshot(s => {
                     const list = s.docs.map(d => ({ ...d.data(), id: d.id }));
                     setAllUsers(list);
@@ -308,14 +318,30 @@
                         if (curr) setSession(prev => ({ ...prev, ...curr }));
                     }
                 });
-                return () => { unsubB(); unsubL(); unsubT(); unsubC(); unsubU(); };
+                
+                const unsubT = db.collection(`${p}/trash`).onSnapshot(s => {
+                    setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
+                });
+
+                const unsubC = db.doc(`${p}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
+
+                return () => { unsubB(); unsubU(); unsubT(); unsubC(); };
             }, [currentUser, session?.email]);
 
+            // Fix caricamento Storico per moto specifica
             useEffect(() => {
                 if (!currentUser || !selectedBikeId) return;
-                return db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).onSnapshot(s => {
+                const bikePath = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
+                
+                const unsubB = db.doc(bikePath).onSnapshot(s => {
                     if (s.exists) setActiveBikeRaw({ ...s.data(), id: s.id });
                 });
+                
+                const unsubL = db.collection(`${bikePath}/logs`).onSnapshot(s => {
+                    setLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id })));
+                });
+                
+                return () => { unsubB(); unsubL(); };
             }, [currentUser, selectedBikeId]);
 
             // --- AZIONI ---
@@ -331,7 +357,7 @@
                 else showToast("Credenziali errate", "error");
             };
 
-            const handleLogout = () => { setSession(null); setSelectedBikeId(null); setView('login'); };
+            const handleLogout = () => { setSession(null); setSelectedBikeId(null); setActiveBikeRaw(null); setView('login'); };
             const showToast = (message, type = 'success') => { setUpdateStatus(String(message)); setTimeout(() => setUpdateStatus(""), 3000); };
             const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
 
@@ -349,21 +375,11 @@
                 return list;
             }, [bikes, session, searchQuery]);
 
-            const handleUpdateProfile = async (e) => {
-                e.preventDefault();
-                if (!session?.id) return;
-                try {
-                    await db.doc(`artifacts/${appId}/public/data/users/${session.id}`).update({ photoURL: profilePhotoUrl });
-                    showToast("Profilo aggiornato!");
-                    setTimeout(() => setView('garage'), 1500);
-                } catch (err) { showToast("Errore", "error"); }
-            };
-
             const handleSoftDeleteLog = (logId, bikeId) => {
                 const logData = logs.find(l => l.id === logId);
                 if (!logData) return;
                 setModal({
-                    isOpen: true, title: "Sposta nel Cestino", message: "L'intervento potrà essere recuperato in seguito.",
+                    isOpen: true, title: "Sposta nel Cestino", message: "Potrai recuperare questo intervento in seguito.",
                     onConfirm: async () => {
                         await db.collection(`artifacts/${appId}/public/data/trash`).add({
                             ...logData,
@@ -372,10 +388,9 @@
                             originalBikeModel: String(activeBike.model),
                             deletedAt: new Date().toISOString()
                         });
-                        await db.doc(`artifacts/${appId}/public/data/logs/${logId}`).delete();
-                        closeModal(); showToast("Spostato");
-                    },
-                    onCancel: closeModal
+                        await db.doc(`artifacts/${appId}/public/data/bikes/${bikeId}/logs/${logId}`).delete();
+                        closeModal(); showToast("Spostato nel cestino");
+                    }
                 });
             };
 
@@ -396,18 +411,36 @@
                 return deadlines;
             };
 
+            const handleUpdateProfile = async (e) => {
+                e.preventDefault();
+                if (!session?.id) return;
+                try {
+                    await db.doc(`artifacts/${appId}/public/data/users/${session.id}`).update({ photoURL: profilePhotoUrl });
+                    showToast("Profilo salvato!");
+                    setTimeout(() => setView('garage'), 1500);
+                } catch (err) { showToast("Errore salvataggio", "error"); }
+            };
+
+            const processFile = (file, callback) => {
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => { callback(event.target.result); };
+                    reader.readAsDataURL(file);
+                }
+            };
+
             if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-orange-500 font-bold animate-pulse uppercase tracking-widest text-center">Garage Loading...</div>;
 
             return (
                 <div className="min-h-screen bg-slate-100 font-sans text-slate-900 text-left">
                     <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left">
                         
-                        <Header view={view} setView={setView} onBack={() => { setSelectedBikeId(null); setView('garage'); }} session={session} onLogout={handleLogout} appSettings={appSettings} />
+                        <Header view={view} setView={setView} onBack={() => { setSelectedBikeId(null); setActiveBikeRaw(null); setView('garage'); }} session={session} onLogout={handleLogout} appSettings={appSettings} />
 
                         <main className="flex-1 overflow-y-auto p-5 pb-40 hide-scrollbar text-left text-slate-900">
                             {view === 'login' && (
                                 <div className="py-10 space-y-12 text-center animate-in">
-                                    <div className="mx-auto w-fit border-2 border-orange-500 rounded-full p-2 shadow-xl"><Icon name="Bike" size={80} className="text-orange-500 m-4"/></div>
+                                    <div className="mx-auto w-fit border-2 border-orange-500 rounded-full p-2 shadow-xl shadow-orange-500/10 animate-bounce-slow"><AppLogo size={140} url={appSettings?.logoURL} /></div>
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center leading-none">Garage Fleet Pro</h2>
                                     <form onSubmit={handleLogin} className="space-y-4 px-4 text-left">
                                         <input required type="email" placeholder="Email Account" className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-orange-500 outline-none text-slate-900 shadow-sm" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
@@ -419,10 +452,13 @@
 
                             {view === 'garage' && session && (
                                 <div className="space-y-6 animate-in text-left">
-                                    {/* HEADER GARAGE FISSO: Questa parte rimane visibile durante lo scroll */}
-                                    <div className="sticky-garage-header text-left">
+                                    {/* HEADER GARAGE FISSO */}
+                                    <div className="garage-fixed-header text-left">
                                         <div className="flex justify-between items-end mb-6 text-left">
-                                            <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">I Tuoi Mezzi</p></div>
+                                            <div className="text-left text-slate-900">
+                                                <h2 className="text-4xl font-black uppercase italic leading-none">Garage</h2>
+                                                <p className="text-slate-400 text-[10px] font-black uppercase mt-2">I Tuoi Mezzi</p>
+                                            </div>
                                             <button onClick={() => setView('addBike')} className="bg-orange-500 text-white p-4 rounded-2xl shadow-lg active:scale-95 transition-transform"><Icon name="Plus" size={24}/></button>
                                         </div>
                                         <div className="relative text-left">
@@ -436,20 +472,22 @@
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
                                             return (
-                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group active:scale-[0.98]">
-                                                    <div className="text-left text-slate-900">
-                                                        <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
-                                                        <div className="flex flex-col gap-1 text-left">
-                                                            {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit">{String(b.targa)}</span>}
-                                                            {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
+                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="group relative bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden active:scale-[0.98] text-left">
+                                                    <div className="flex justify-between items-start relative z-10 text-slate-900 text-left">
+                                                        <div className="text-left">
+                                                            <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
+                                                            <div className="flex flex-col gap-1 text-left">
+                                                                {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit text-left">{String(b.targa)}</span>}
+                                                                {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
+                                                            </div>
+                                                            <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
+                                                            <div className="flex flex-wrap gap-1 mt-2 text-left">
+                                                                {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
+                                                                {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
+                                                            </div>
                                                         </div>
-                                                        <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
-                                                        <div className="flex flex-wrap gap-1 mt-2 text-left">
-                                                            {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
-                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
-                                                        </div>
+                                                        <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
                                                     </div>
-                                                    <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
                                                 </div>
                                             );
                                         })}
@@ -477,7 +515,7 @@
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left text-slate-900">
                                             <Icon name="History" className="text-slate-400" size={32} />
                                             <span className="font-black uppercase text-xs tracking-tighter text-left">Cronologia</span>
                                         </button>
@@ -503,10 +541,10 @@
                                                     <div className="text-left space-y-1">
                                                         <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase">{String(l.category)}</span>
                                                         <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1">{String(l.type)}</h4>
-                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
+                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <div className="text-right text-slate-900 text-left">
+                                                        <div className="text-right text-slate-900 text-left text-slate-900">
                                                             <p className="font-black text-slate-900 text-sm">{(Number(l.km || 0)).toLocaleString()} KM</p>
                                                             <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right">€{l.cost}</p>
                                                         </div>
@@ -519,7 +557,7 @@
                                 </div>
                             )}
 
-                            {view === 'admin' && isAdmin && (
+                            {view === 'admin' && session?.role === 'admin' && (
                                 <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none">Admin Panel</h2>
                                     <div className="space-y-4 text-left">
@@ -531,14 +569,14 @@
                                                     <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left">
                                                         <div className="flex flex-col gap-1 text-left text-slate-900">
                                                             <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left">{String(u.email || "")}</p>
-                                                            <div className="flex items-center gap-2 mt-1 text-left">
+                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left">
                                                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{String(u.role || "user")}</span>
                                                                 <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
                                                                 <span className="text-[9px] text-slate-400 font-black">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-1 text-slate-900">
-                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-left"><Icon name="Trash2" size={16}/></button>
+                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-left text-slate-900"><Icon name="Trash2" size={16}/></button>
                                                         </div>
                                                     </div>
                                                 );
@@ -565,7 +603,7 @@
                                     <h2 className="text-2xl font-black uppercase italic text-slate-900 text-center">{String(session.email)}</h2>
                                     <form onSubmit={handleUpdateProfile} className="space-y-4 pt-6 text-center">
                                         <input className="w-full p-5 bg-slate-50 rounded-2xl font-bold border-2 border-slate-100 outline-none focus:border-orange-500 text-slate-900" placeholder="Incolla URL foto profilo" value={profilePhotoUrl} onChange={e => setProfilePhotoUrl(e.target.value)} />
-                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 italic">Salva Profilo</button>
+                                        <button className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black uppercase shadow-xl active:scale-95 italic text-white italic">Salva Profilo</button>
                                     </form>
                                 </div>
                             )}
