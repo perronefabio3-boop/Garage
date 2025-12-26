@@ -41,15 +41,17 @@
 
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); }
         
-        /* Stile critico per l'header fisso durante lo scroll */
-        .garage-fixed-header {
+        /* Fix per l'header del garage che deve rimanere visibile durante lo scroll */
+        .sticky-garage-header {
             position: sticky;
             top: 0;
-            z-index: 40;
-            background: rgba(241, 245, 249, 0.98);
+            z-index: 30;
+            background: rgba(241, 245, 249, 0.95);
             backdrop-filter: blur(12px);
-            padding-bottom: 1.5rem;
-            margin-bottom: 1rem;
+            margin-left: -20px;
+            margin-right: -20px;
+            margin-top: -20px;
+            padding: 20px;
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
     </style>
@@ -125,9 +127,9 @@
                 Search: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="21" y1="21" y2="16.65"/></>,
                 Edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
                 ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="14" x2="21" y2="3"/></>,
-                ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
-                CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
                 ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
+                CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
+                ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
                 CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9" y1="17" x2="15" y2="17"/></>
             };
             return (
@@ -163,8 +165,8 @@
                             <p className="text-sm text-slate-500 font-medium">{String(message)}</p>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <button onClick={onConfirm} className="w-full bg-red-500 text-white p-4 rounded-2xl font-black uppercase text-sm btn-active shadow-lg"> Conferma </button>
-                            <button onClick={onCancel} className="w-full bg-slate-100 text-slate-500 p-4 rounded-2xl font-black uppercase text-sm btn-active"> Annulla </button>
+                            <button onClick={onConfirm} className="w-full bg-red-500 text-white p-4 rounded-2xl font-black uppercase text-sm btn-active shadow-lg italic"> Conferma </button>
+                            <button onClick={onCancel} className="w-full bg-slate-100 text-slate-500 p-4 rounded-2xl font-black uppercase text-sm btn-active italic"> Annulla </button>
                         </div>
                     </div>
                 </div>
@@ -244,7 +246,7 @@
             const [bikes, setBikes] = useState([]);
             const [selectedBikeId, setSelectedBikeId] = useState(null);
             const [activeBikeRaw, setActiveBikeRaw] = useState(null);
-            const [logsRaw, setLogsRaw] = useState([]);
+            const [allLogsRaw, setAllLogsRaw] = useState([]);
             const [trashLogsRaw, setTrashLogsRaw] = useState([]);
             const [allUsers, setAllUsers] = useState([]);
 
@@ -272,16 +274,12 @@
                 return b;
             }, [activeBikeRaw]);
 
-            // Fix per il caricamento storico: usiamo logsRaw che viene popolato in base alla moto selezionata
             const logs = useMemo(() => {
-                return (logsRaw || []).map(l => ({ 
+                return (allLogsRaw || []).filter(l => l.bikeId === selectedBikeId).map(l => ({ 
                     ...l, 
-                    docLink: cryptoUtils.decrypt(l.docLink),
-                    type: String(l.type || ""),
-                    category: String(l.category || "Manutenzione"),
-                    cost: String(l.cost || "0")
+                    docLink: cryptoUtils.decrypt(l.docLink)
                 })).sort((a,b) => new Date(b.date) - new Date(a.date));
-            }, [logsRaw]);
+            }, [allLogsRaw, selectedBikeId]);
 
             const trashLogs = useMemo(() => {
                 return (trashLogsRaw || []).map(l => ({ 
@@ -309,7 +307,9 @@
                 const p = `artifacts/${appId}/public/data`;
                 
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-                
+                const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
+                const unsubT = db.collection(`${p}/trash`).onSnapshot(s => setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
+                const unsubC = db.doc(`${p}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
                 const unsubU = db.collection(`${p}/users`).onSnapshot(s => {
                     const list = s.docs.map(d => ({ ...d.data(), id: d.id }));
                     setAllUsers(list);
@@ -318,30 +318,14 @@
                         if (curr) setSession(prev => ({ ...prev, ...curr }));
                     }
                 });
-                
-                const unsubT = db.collection(`${p}/trash`).onSnapshot(s => {
-                    setTrashLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a,b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
-                });
-
-                const unsubC = db.doc(`${p}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
-
-                return () => { unsubB(); unsubU(); unsubT(); unsubC(); };
+                return () => { unsubB(); unsubL(); unsubT(); unsubC(); unsubU(); };
             }, [currentUser, session?.email]);
 
-            // Fix caricamento Storico per moto specifica
             useEffect(() => {
                 if (!currentUser || !selectedBikeId) return;
-                const bikePath = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
-                
-                const unsubB = db.doc(bikePath).onSnapshot(s => {
+                return db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).onSnapshot(s => {
                     if (s.exists) setActiveBikeRaw({ ...s.data(), id: s.id });
                 });
-                
-                const unsubL = db.collection(`${bikePath}/logs`).onSnapshot(s => {
-                    setLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id })));
-                });
-                
-                return () => { unsubB(); unsubL(); };
             }, [currentUser, selectedBikeId]);
 
             // --- AZIONI ---
@@ -375,6 +359,16 @@
                 return list;
             }, [bikes, session, searchQuery]);
 
+            const handleUpdateProfile = async (e) => {
+                e.preventDefault();
+                if (!session?.id) return;
+                try {
+                    await db.doc(`artifacts/${appId}/public/data/users/${session.id}`).update({ photoURL: profilePhotoUrl });
+                    showToast("Profilo salvato!");
+                    setTimeout(() => setView('garage'), 1500);
+                } catch (err) { showToast("Errore salvataggio", "error"); }
+            };
+
             const handleSoftDeleteLog = (logId, bikeId) => {
                 const logData = logs.find(l => l.id === logId);
                 if (!logData) return;
@@ -388,9 +382,10 @@
                             originalBikeModel: String(activeBike.model),
                             deletedAt: new Date().toISOString()
                         });
-                        await db.doc(`artifacts/${appId}/public/data/bikes/${bikeId}/logs/${logId}`).delete();
-                        closeModal(); showToast("Spostato nel cestino");
-                    }
+                        await db.doc(`artifacts/${appId}/public/data/logs/${logId}`).delete();
+                        closeModal(); showToast("Spostato");
+                    },
+                    onCancel: closeModal
                 });
             };
 
@@ -411,16 +406,6 @@
                 return deadlines;
             };
 
-            const handleUpdateProfile = async (e) => {
-                e.preventDefault();
-                if (!session?.id) return;
-                try {
-                    await db.doc(`artifacts/${appId}/public/data/users/${session.id}`).update({ photoURL: profilePhotoUrl });
-                    showToast("Profilo salvato!");
-                    setTimeout(() => setView('garage'), 1500);
-                } catch (err) { showToast("Errore salvataggio", "error"); }
-            };
-
             const processFile = (file, callback) => {
                 if (file && file.type.startsWith('image/')) {
                     const reader = new FileReader();
@@ -435,7 +420,7 @@
                 <div className="min-h-screen bg-slate-100 font-sans text-slate-900 text-left">
                     <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left">
                         
-                        <Header view={view} setView={setView} onBack={() => { setSelectedBikeId(null); setActiveBikeRaw(null); setView('garage'); }} session={session} onLogout={handleLogout} appSettings={appSettings} />
+                        <Header view={view} setView={setView} onBack={() => { setSelectedBikeId(null); setView('garage'); }} session={session} onLogout={handleLogout} appSettings={appSettings} />
 
                         <main className="flex-1 overflow-y-auto p-5 pb-40 hide-scrollbar text-left text-slate-900">
                             {view === 'login' && (
@@ -472,7 +457,7 @@
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
                                             return (
-                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="group relative bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden active:scale-[0.98] text-left">
+                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group active:scale-[0.98] text-left">
                                                     <div className="flex justify-between items-start relative z-10 text-slate-900 text-left">
                                                         <div className="text-left">
                                                             <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
@@ -551,6 +536,16 @@
                                                         <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90"><Icon name="Trash2" size={18}/></button>
                                                     </div>
                                                 </div>
+                                                {/* Dettagli dell'intervento (Lista puntata) */}
+                                                {l.items && l.items.length > 0 && (
+                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left">
+                                                        {l.items.filter(i => i && String(i).trim() !== "").map((item, idx) => (
+                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left">
+                                                                <span className="text-orange-500 mt-1">•</span> {String(item)}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
