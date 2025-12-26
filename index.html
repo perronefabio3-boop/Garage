@@ -41,17 +41,16 @@
 
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); }
         
-        /* Fix definitivo per l'header appiccicoso nel garage */
+        /* Fix per l'header del garage che deve rimanere visibile durante lo scroll */
         .sticky-garage-header {
             position: sticky;
-            top: 0;
-            z-index: 40;
+            top: -20px; /* Compensa il padding del container main */
+            z-index: 30;
             background: rgba(241, 245, 249, 0.95);
             backdrop-filter: blur(12px);
-            padding: 20px;
             margin-left: -20px;
             margin-right: -20px;
-            margin-top: -20px;
+            padding: 20px;
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
     </style>
@@ -76,7 +75,6 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // RULE 1: Sanificazione appId per percorsi Firestore
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
@@ -104,7 +102,7 @@
             }
         };
 
-        // --- COMPONENTI UI DI SUPPORTO ---
+        // --- COMPONENTI UI (DEFINITI PRIMA PER EVITARE REFERENCE ERRORS) ---
 
         function Icon({ name, size = 24, className = "" }) {
             const icons = {
@@ -159,9 +157,9 @@
         function Modal({ isOpen, title, message, onConfirm, onCancel }) {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in fade-in">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in fade-in text-center">
                     <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-                        <div className="text-center space-y-2">
+                        <div className="space-y-2">
                             <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">{String(title)}</h3>
                             <p className="text-sm text-slate-500 font-medium">{String(message)}</p>
                         </div>
@@ -235,7 +233,7 @@
         // --- APP LOGIC ---
 
         function App() {
-            const [user, setUser] = useState(null);
+            const [currentUser, setCurrentUser] = useState(null);
             const [session, setSession] = useState(null);
             const [loading, setLoading] = useState(true);
             const [view, setView] = useState('login');
@@ -289,14 +287,14 @@
                 return km === 0 ? "0.000" : (totalCostValue / km).toFixed(3);
             }, [activeBike, totalCostValue]);
 
-            // --- FIREBASE SYNC (Regola 3) ---
+            // --- FIREBASE SYNC ---
             useEffect(() => {
                 auth.signInAnonymously();
-                return auth.onAuthStateChanged(u => { setUser(u); setLoading(false); });
+                return auth.onAuthStateChanged(u => { setCurrentUser(u); setLoading(false); });
             }, []);
 
             useEffect(() => {
-                if (!user) return;
+                if (!currentUser) return;
                 const p = `artifacts/${appId}/public/data`;
                 const unsubB = db.collection(`${p}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({ ...d.data(), id: d.id }))));
                 const unsubL = db.collection(`${p}/logs`).onSnapshot(s => setAllLogsRaw(s.docs.map(d => ({ ...d.data(), id: d.id }))));
@@ -311,14 +309,14 @@
                     }
                 });
                 return () => { unsubB(); unsubL(); unsubT(); unsubC(); unsubU(); };
-            }, [user, session?.email]);
+            }, [currentUser, session?.email]);
 
             useEffect(() => {
-                if (!user || !selectedBikeId) return;
+                if (!currentUser || !selectedBikeId) return;
                 return db.doc(`artifacts/${appId}/public/data/bikes/${selectedBikeId}`).onSnapshot(s => {
                     if (s.exists) setActiveBikeRaw({ ...s.data(), id: s.id });
                 });
-            }, [user, selectedBikeId]);
+            }, [currentUser, selectedBikeId]);
 
             // --- AZIONI ---
             const handleLogin = async (e) => {
@@ -376,7 +374,8 @@
                         });
                         await db.doc(`artifacts/${appId}/public/data/logs/${logId}`).delete();
                         closeModal(); showToast("Spostato");
-                    }
+                    },
+                    onCancel: closeModal
                 });
             };
 
@@ -420,7 +419,7 @@
 
                             {view === 'garage' && session && (
                                 <div className="space-y-6 animate-in text-left">
-                                    {/* HEADER GARAGE FISSO */}
+                                    {/* HEADER GARAGE FISSO: Questa parte rimane visibile durante lo scroll */}
                                     <div className="sticky-garage-header text-left">
                                         <div className="flex justify-between items-end mb-6 text-left">
                                             <div className="text-left"><h2 className="text-4xl font-black uppercase italic leading-none text-slate-900">Garage</h2><p className="text-slate-400 text-[10px] font-black uppercase mt-2">I Tuoi Mezzi</p></div>
@@ -431,6 +430,8 @@
                                             <input className="w-full bg-white border-2 border-slate-100 focus:border-orange-200 rounded-2xl p-4 pl-12 font-bold outline-none text-sm shadow-sm text-slate-900" placeholder="Cerca modello, targa o email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                                         </div>
                                     </div>
+                                    
+                                    {/* LISTA VEICOLI SCORREVOLE */}
                                     <div className="grid gap-4 text-left">
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
@@ -443,7 +444,7 @@
                                                             {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
                                                         </div>
                                                         <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
-                                                        <div className="flex flex-wrap gap-1 mt-2">
+                                                        <div className="flex flex-wrap gap-1 mt-2 text-left">
                                                             {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
                                                             {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1" /> In Regola</span>}
                                                         </div>
@@ -457,26 +458,35 @@
                             )}
 
                             {view === 'dashboard' && activeBike && (
-                                <div className="space-y-6 animate-in text-left text-slate-900">
-                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl relative overflow-hidden text-left border-4 border-slate-800">
+                                <div className="space-y-6 animate-in text-left text-slate-900 text-left">
+                                    <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl overflow-hidden relative border border-slate-800 text-left text-white text-left">
                                         <div className="relative z-10 text-white text-left">
-                                            <h2 className="text-3xl font-black uppercase tracking-tight mb-2 truncate italic leading-none">{String(activeBike.model || "")}</h2>
+                                            <h2 className="text-3xl font-black uppercase tracking-tight mb-2 truncate italic leading-none text-left">{String(activeBike.model || "")}</h2>
                                             <div className="flex items-baseline gap-2 opacity-80 pt-2 text-white">
                                                 <span className="text-2xl font-bold tabular-nums">{(Number(activeBike.odometer) || 0).toLocaleString()}</span>
-                                                <span className="text-orange-500 font-black text-[10px] tracking-[0.2em] uppercase leading-none">Km Totali</span>
+                                                <span className="text-orange-500 font-black text-[10px] tracking-[0.2em] uppercase text-left">Km Totali</span>
                                             </div>
                                         </div>
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-slate-900">
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400">Costo / KM</span></div><p className="text-xl font-black">€ {costPerKm}</p></div>
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Totale Spesa</span></div><p className="text-xl font-black text-left">€ {totalCostValue.toLocaleString()}</p></div>
+                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left">
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-left"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Costo / KM</span></div><p className="text-xl font-black text-left">€ {costPerKm}</p></div>
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900">
+                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Totale Spesa</span></div>
+                                            <p className="text-xl font-black text-left text-left text-left">€ {totalCostValue.toLocaleString()}</p>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-slate-900">
-                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform active:scale-95 shadow-lg"><Icon name="History" className="text-slate-400" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Cronologia</span></button>
-                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform active:scale-95 shadow-lg text-white"><Icon name="Plus" className="text-orange-500" size={32} /><span className="font-black uppercase text-xs tracking-tighter">Nuovo Log</span></button>
+                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left">
+                                        <button onClick={() => setView('history')} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-left">
+                                            <Icon name="History" className="text-slate-400" size={32} />
+                                            <span className="font-black uppercase text-xs tracking-tighter text-left">Cronologia</span>
+                                        </button>
+                                        <button onClick={() => setView('addLog')} className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-sm flex flex-col items-center gap-3 btn-active transition-transform text-center active:scale-95 shadow-lg text-white text-left">
+                                            <Icon name="Plus" className="text-orange-500" size={32} />
+                                            <span className="font-black uppercase text-xs tracking-tighter text-white text-left text-left">Nuovo Log</span>
+                                        </button>
                                     </div>
-                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter">Archivio Documenti Protetti</span></button>
+                                    <button onClick={() => setView('documents')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[2.5rem] shadow-sm flex items-center justify-center gap-3 btn-active active:scale-95 text-slate-900"><Icon name="Files" className="text-blue-500" size={24} /><span className="font-black uppercase text-xs tracking-tighter">Archivio Documenti Protetti</span></button>
                                 </div>
                             )}
 
@@ -510,25 +520,25 @@
                             )}
 
                             {view === 'admin' && isAdmin && (
-                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900">
+                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none">Admin Panel</h2>
                                     <div className="space-y-4 text-left">
-                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2">Utenti Registrati</h3>
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left">Utenti Registrati</h3>
                                         <div className="grid gap-3 text-left">
                                             {allUsers.map(u => {
                                                 const showPass = showPassMap[u.id];
                                                 return (
-                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900">
+                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left">
                                                         <div className="flex flex-col gap-1 text-left text-slate-900">
                                                             <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left">{String(u.email || "")}</p>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>{String(u.role || "user")}</span>
+                                                            <div className="flex items-center gap-2 mt-1 text-left">
+                                                                <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left'}`}>{String(u.role || "user")}</span>
                                                                 <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
                                                                 <span className="text-[9px] text-slate-400 font-black">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-1 text-slate-900">
-                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90"><Icon name="Trash2" size={16}/></button>
+                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-left"><Icon name="Trash2" size={16}/></button>
                                                         </div>
                                                     </div>
                                                 );
