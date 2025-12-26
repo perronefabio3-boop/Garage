@@ -44,9 +44,9 @@
         /* Fix strutturale per l'header del garage bloccato durante lo scroll */
         .sticky-garage-header {
             position: sticky;
-            top: -20px; /* Corrisponde al padding-top del main container */
+            top: -20px;
             z-index: 50;
-            background-color: #f1f5f9; /* Colore solido uguale al body */
+            background-color: #f1f5f9;
             padding: 20px;
             margin-left: -20px;
             margin-right: -20px;
@@ -79,7 +79,7 @@
         const appId = "garage_snoopy_final";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
-        const APP_VERSION = "1.1.0"; // Versione Pro - Fix Sticky Header & Search
+        const APP_VERSION = "1.1.1"; // Fix Syntax Error & Pro Restoration
 
         const SECRET_KEY = "GarageSnoopyPass2025!"; 
         const ENC_PREFIX = "ENC_";
@@ -131,7 +131,8 @@
                 ShieldCheck: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
                 CreditCard: <><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></>,
                 ClipboardCheck: <><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></>,
-                CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>
+                CalendarPlus: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+                Save: <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>
             };
             return (
                 <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -143,7 +144,7 @@
         function AppLogo({ size = 100, url = "" }) {
             return (
                 <div className="flex items-center justify-center bg-white rounded-full border-2 border-orange-500 shadow-sm overflow-hidden" style={{ width: size, height: size }}>
-                    {url ? <img src={url} className="w-full h-full object-cover" /> : <Icon name="Bike" size={size * 0.6} className="text-orange-500" />}
+                    {url ? <img src={url} className="w-full h-full object-cover" alt="Logo" /> : <Icon name="Bike" size={size * 0.6} className="text-orange-500" />}
                 </div>
             );
         }
@@ -151,7 +152,7 @@
         function UserAvatar({ size = 36, url = "" }) {
             return (
                 <div className="flex items-center justify-center bg-slate-200 rounded-full border border-slate-300 shadow-sm overflow-hidden" style={{ width: size, height: size }}>
-                    {url ? <img src={url} className="w-full h-full object-cover" /> : <Icon name="Shield" size={size * 0.6} className="text-slate-400" />}
+                    {url ? <img src={url} className="w-full h-full object-cover" alt="Avatar" /> : <Icon name="Shield" size={size * 0.6} className="text-slate-400" />}
                 </div>
             );
         }
@@ -159,15 +160,15 @@
         function Modal({ isOpen, title, message, onConfirm, onCancel }) {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in fade-in text-center">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in fade-in">
                     <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6">
-                        <div className="space-y-2">
+                        <div className="text-center space-y-2">
                             <h3 className="text-xl font-black uppercase italic tracking-tighter text-slate-900">{String(title)}</h3>
                             <p className="text-sm text-slate-500 font-medium">{String(message)}</p>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <button onClick={onConfirm} className="w-full bg-red-500 text-white p-4 rounded-2xl font-black uppercase text-sm btn-active shadow-lg italic"> Conferma </button>
-                            <button onClick={onCancel} className="w-full bg-slate-100 text-slate-500 p-4 rounded-2xl font-black uppercase text-sm btn-active italic"> Annulla </button>
+                            <button onClick={onConfirm} className="w-full bg-red-500 text-white p-4 rounded-2xl font-black uppercase text-sm btn-active shadow-lg"> Conferma </button>
+                            <button onClick={onCancel} className="w-full bg-slate-100 text-slate-500 p-4 rounded-2xl font-black uppercase text-sm btn-active"> Annulla </button>
                         </div>
                     </div>
                 </div>
@@ -192,7 +193,7 @@
                         )}
                         <div className="flex items-center gap-2 cursor-pointer" onClick={() => session && setView('garage')}>
                             <AppLogo size={36} url={appSettings?.logoURL} />
-                            <h1 className="font-black italic uppercase tracking-tighter text-xl leading-none ml-1">Garage</h1>
+                            <h1 className="font-black italic uppercase tracking-tighter text-xl leading-none">Garage</h1>
                         </div>
                     </div>
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center">
@@ -238,7 +239,7 @@
             );
         }
 
-        // --- APP PRINCIPALE ---
+        // --- APP LOGIC ---
 
         function App() {
             const [currentUser, setCurrentUser] = useState(null);
@@ -325,7 +326,7 @@
                 });
                 const unsubC = db.doc(`${p}/settings/app`).onSnapshot(s => s.exists && setAppSettings(s.data()));
                 const unsubU = db.collection(`${p}/users`).onSnapshot(s => {
-                    const list = (s.docs || []).map(d => ({ ...d.data(), id: d.id }));
+                    const list = s.docs.map(d => ({ ...d.data(), id: d.id }));
                     setAllUsers(list);
                     if (session?.email) {
                         const curr = list.find(u => u.email.toLowerCase() === session.email.toLowerCase());
@@ -460,7 +461,7 @@
 
             return (
                 <div className="min-h-screen bg-slate-100 font-sans text-slate-900 text-left">
-                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left text-slate-900">
+                    <div className="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col text-left">
                         
                         <Header view={view} setView={setView} onBack={() => { setSelectedBikeId(null); setView('garage'); }} session={session} onLogout={handleLogout} appSettings={appSettings} />
 
@@ -479,7 +480,6 @@
 
                             {view === 'garage' && session && (
                                 <div className="space-y-6 animate-in text-left">
-                                    {/* HEADER GARAGE FISSO */}
                                     <div className="sticky-garage-header text-left">
                                         <div className="flex justify-between items-end mb-6 text-left">
                                             <div className="text-left text-slate-900">
@@ -498,20 +498,22 @@
                                         {visibleBikes.map(b => {
                                             const dls = getBikeDeadlines(b);
                                             return (
-                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="group relative bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer hover:border-orange-200 transition-all group active:scale-[0.98] text-left">
-                                                    <div className="text-left text-slate-900">
-                                                        <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
-                                                        <div className="flex flex-col gap-1 text-left">
-                                                            {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit text-left">{String(b.targa)}</span>}
-                                                            {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
+                                                <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="group relative bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden active:scale-[0.98] text-left">
+                                                    <div className="flex justify-between items-start relative z-10 text-slate-900 text-left">
+                                                        <div className="text-left">
+                                                            <h3 className="font-black uppercase italic text-xl group-hover:text-orange-600 transition-colors leading-none mb-2 text-left">{String(b.model || "")}</h3>
+                                                            <div className="flex flex-col gap-1 text-left">
+                                                                {b.targa && <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-slate-200 uppercase w-fit text-left">{String(b.targa)}</span>}
+                                                                {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 truncate lowercase text-left">{String(b.userEmail)}</p>}
+                                                            </div>
+                                                            <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
+                                                            <div className="flex flex-wrap gap-1 mt-2 text-left">
+                                                                {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
+                                                                {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left text-left text-emerald-500"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1 text-emerald-500" /> In Regola</span>}
+                                                            </div>
                                                         </div>
-                                                        <p className="text-slate-400 font-bold text-[11px] mt-2 uppercase tracking-wider italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM TOTALI</p>
-                                                        <div className="flex flex-wrap gap-1 mt-2 text-left">
-                                                            {dls.map((d, i) => <span key={i} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase border ${d.urgent ? 'bg-red-50 border-red-200 text-red-500' : 'bg-orange-50 border-orange-200 text-orange-500'}`}>{String(d.type)}</span>)}
-                                                            {dls.length === 0 && <span className="text-[8px] font-black text-emerald-500 uppercase flex items-center gap-1 text-left text-left text-emerald-500"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse mr-1 text-emerald-500" /> In Regola</span>}
-                                                        </div>
+                                                        <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
                                                     </div>
-                                                    <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
                                                 </div>
                                             );
                                         })}
@@ -531,10 +533,10 @@
                                         </div>
                                         <Icon name="Bike" size={200} className="absolute -right-10 -bottom-10 opacity-10" />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left">
-                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left"><div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left text-left">€ {costPerKm}</p></div>
+                                    <div className="grid grid-cols-2 gap-4 text-slate-900 text-left text-left text-left">
+                                        <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-left"><div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="TrendingUp" size={16} className="text-emerald-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-left">Costo / KM</span></div><p className="text-xl font-black text-left text-left text-left">€ {costPerKm}</p></div>
                                         <div className="p-5 bg-white border-2 border-slate-100 rounded-[2rem] shadow-sm text-left text-slate-900 text-left text-left">
-                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-slate-400">Totale Spesa</span></div>
+                                            <div className="flex items-center gap-2 mb-1 text-left text-slate-900"><Icon name="History" size={16} className="text-blue-500"/><span className="text-[9px] font-black uppercase text-slate-400 text-left text-left text-slate-400 text-left">Totale Spesa</span></div>
                                             <p className="text-xl font-black text-left text-left text-left text-left">€ {totalCostValue.toLocaleString()}</p>
                                         </div>
                                     </div>
@@ -552,10 +554,9 @@
                                 </div>
                             )}
 
-                            {/* ARCHIVIO DOCUMENTI */}
                             {view === 'documents' && activeBike && (
-                                <div className="space-y-6 animate-in text-left text-slate-900 text-left">
-                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left">
+                                <div className="space-y-6 animate-in text-left text-slate-900 text-left text-left">
+                                    <div className="flex justify-between items-center text-left text-slate-900 text-left text-left text-left">
                                         <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left text-left">Archivio</h2>
                                         <Icon name="Files" className="text-blue-500" size={28}/>
                                     </div>
@@ -567,19 +568,19 @@
                                         <div key={item.key} className="p-6 bg-white rounded-[2.5rem] border-2 border-slate-100 shadow-sm space-y-4 text-left text-left text-left">
                                             <div className="flex justify-between items-start text-left text-slate-900 text-left text-left">
                                                 <div className="flex items-center gap-3 text-left">
-                                                    <div className="p-2 bg-slate-50 rounded-xl text-slate-400 text-center text-center text-center"><Icon name={item.icon} size={20}/></div>
+                                                    <div className="p-2 bg-slate-50 rounded-xl text-slate-400 text-center text-center"><Icon name={item.icon} size={20}/></div>
                                                     <div className="text-left text-left text-left">
-                                                        <h3 className="font-black uppercase text-sm text-slate-800 text-left">{String(item.label)}</h3>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase text-left">Status Documento</p>
+                                                        <h3 className="font-black uppercase text-sm text-slate-800 text-left text-left">{String(item.label)}</h3>
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase text-left text-left text-left">Status Documento</p>
                                                     </div>
                                                 </div>
                                                 {activeBike[item.key] && (
-                                                    <button onClick={() => window.open(generateCalendarLink(item.label, activeBike.model, activeBike[item.key]), "_blank")} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90 text-left text-center text-center text-center"><Icon name="CalendarPlus" size={18}/></button>
+                                                    <button onClick={() => window.open(generateCalendarLink(item.label, activeBike.model, activeBike[item.key]), "_blank")} className="p-2 bg-blue-50 text-blue-500 rounded-xl active:scale-90 text-left text-center text-center"><Icon name="CalendarPlus" size={18}/></button>
                                                 )}
                                             </div>
-                                            <div className="grid grid-cols-1 gap-2 text-left text-slate-900 text-left text-left">
-                                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left">Data Scadenza</p><p className="font-black text-slate-800 text-left text-left text-left">{activeBike[item.key] ? new Date(activeBike[item.key]).toLocaleDateString('it-IT') : 'Mancante'}</p></div>
-                                                {activeBike[item.num] && (<div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left text-left">Codice/Polizza</p><p className="font-black text-slate-800 text-left text-left text-left text-left">{String(activeBike[item.num])}</p></div>)}
+                                            <div className="grid grid-cols-1 gap-2 text-left text-slate-900 text-left text-left text-left">
+                                                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left text-left">Data Scadenza</p><p className="font-black text-slate-800 text-left text-left text-left text-left">{activeBike[item.key] ? new Date(activeBike[item.key]).toLocaleDateString('it-IT') : 'Mancante'}</p></div>
+                                                {activeBike[item.num] && (<div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-left text-left text-left text-left text-left"><p className="text-[8px] font-black text-slate-400 uppercase text-left text-left text-left text-left text-left">Codice/Polizza</p><p className="font-black text-slate-800 text-left text-left text-left text-left text-left">{String(activeBike[item.num])}</p></div>)}
                                             </div>
                                             <div className="flex gap-2 text-left text-left">
                                                 {activeBike[item.link] ? (
@@ -601,35 +602,33 @@
                                     </div>
                                     <div className="space-y-5 text-left text-slate-900 text-left text-left">
                                         {logs.length === 0 ? <p className="text-slate-300 italic py-10 text-center uppercase font-black text-[10px] text-center text-center">Nessun log trovato</p> : logs.map(l => (
-                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left text-left">
-                                                <div className="flex justify-between items-start text-left text-slate-900 text-left text-left">
-                                                    <div className="text-left space-y-1 text-left text-slate-900">
-                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-left text-left">{String(l.category)}</span>
-                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left text-left text-left">{String(l.type)}</h4>
-                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left text-slate-400 text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
+                                            <div key={l.id} className="bg-white border-2 border-slate-50 p-6 rounded-[3rem] shadow-sm space-y-4 text-left animate-in slide-in-from-bottom-2 text-left text-left text-left">
+                                                <div className="flex justify-between items-start text-left text-slate-900 text-left text-left text-left">
+                                                    <div className="text-left space-y-1 text-left text-left text-left">
+                                                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-left text-left text-left">{String(l.category)}</span>
+                                                        <h4 className="font-black text-xl uppercase italic text-slate-800 leading-tight pt-1 text-left text-left text-left text-left">{String(l.type)}</h4>
+                                                        <p className="text-slate-400 font-bold text-xs mt-1 flex items-center gap-1 text-left text-left text-left text-slate-400 text-left text-left"><Icon name="Clock" size={12}/> {l.date ? new Date(l.date).toLocaleDateString('it-IT') : 'N/D'}</p>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-left text-left text-left">
-                                                        <div className="text-right text-slate-900 text-left text-left text-left text-slate-900 text-left">
-                                                            <p className="font-black text-slate-900 text-sm text-left text-left">{(Number(l.km || 0)).toLocaleString()} KM</p>
-                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-emerald-600 text-left">€{l.cost}</p>
+                                                    <div className="flex items-center gap-2 text-left text-left text-left text-left text-left">
+                                                        <div className="text-right text-slate-900 text-left text-left text-left text-slate-900 text-left text-left text-left">
+                                                            <p className="font-black text-slate-900 text-sm text-left text-left text-left">{(Number(l.km || 0)).toLocaleString()} KM</p>
+                                                            <p className="text-emerald-600 font-black text-lg leading-none mt-1 italic text-right text-left text-emerald-600 text-left text-left text-left">€{l.cost}</p>
                                                         </div>
-                                                        <button onClick={() => { setEditingLog({ ...l, items: l.items || [''] }); setView('editLog'); }} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center"><Icon name="Edit" size={16}/></button>
-                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-red-400 text-center"><Icon name="Trash2" size={18}/></button>
+                                                        <button onClick={() => { setEditingLog({ ...l, items: l.items || [''] }); setView('editLog'); }} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center text-center"><Icon name="Edit" size={16}/></button>
+                                                        <button onClick={() => handleSoftDeleteLog(l.id, selectedBikeId)} className="p-2 text-red-300 hover:text-red-500 transition-colors active:scale-90 text-left text-red-400 text-center text-center"><Icon name="Trash2" size={18}/></button>
                                                     </div>
                                                 </div>
-                                                {/* Dettagli dell'intervento (Lista puntata) */}
                                                 {l.items && l.items.length > 0 && (
-                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left text-left">
+                                                    <div className="border-t border-slate-100 pt-3 space-y-1.5 text-left text-left text-left text-left text-left">
                                                         {l.items.filter(i => i && String(i).trim() !== "").map((item, idx) => (
-                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left text-left text-left">
-                                                                <span className="text-orange-500 mt-1 text-left text-left">•</span> {String(item)}
+                                                            <div key={idx} className="text-xs text-slate-500 font-medium flex items-start gap-2 text-left text-left text-left text-left text-left">
+                                                                <span className="text-orange-500 mt-1 text-left text-left text-left text-left">•</span> {String(item)}
                                                             </div>
                                                         ))}
                                                     </div>
                                                 )}
-                                                {/* PULSANTE DOCUMENTO REGISTRO (RIPRISTINATO) */}
                                                 {l.docLink && (
-                                                    <button onClick={() => window.open(l.docLink, '_blank')} className="w-full mt-3 bg-slate-100 text-slate-600 p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 transition-all text-center">
+                                                    <button onClick={() => window.open(l.docLink, '_blank')} className="w-full mt-3 bg-slate-100 text-slate-600 p-3 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95 transition-all text-center text-center">
                                                         <Icon name="ExternalLink" size={14}/> Apri Documento PDF
                                                     </button>
                                                 )}
@@ -640,53 +639,53 @@
                             )}
 
                             {view === 'admin' && session?.role === 'admin' && (
-                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none text-left text-left">Admin Panel</h2>
+                                <div className="p-6 space-y-8 animate-in pb-40 text-left text-slate-900 text-left text-left text-left text-left text-left">
+                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left leading-none text-left text-left text-left">Admin Panel</h2>
                                     
-                                    <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'} text-left`}>
-                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left text-left">
+                                    <div className={`p-7 rounded-[2.5rem] space-y-4 shadow-xl border ${editingUser ? 'bg-blue-900 border-blue-700 text-white' : 'bg-slate-900 border-slate-800 text-white'} text-left text-left`}>
+                                        <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2 text-left text-left text-left">
                                             <Icon name={editingUser ? "Edit" : "UserPlus"} size={18}/> 
                                             {editingUser ? `Modifica: ${String(editingUser.email)}` : "Registra Nuovo Cliente"}
                                         </h3>
-                                        <div className="space-y-1 text-left text-slate-300 text-left text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left">Email Account</label>
-                                            <input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left" value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} />
-                                        </div>
                                         <div className="space-y-1 text-left text-slate-300 text-left text-left text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left">Password</label>
-                                            <input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left" value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left">Email Account</label>
+                                            <input required type="email" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left text-left text-left" value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} />
                                         </div>
                                         <div className="space-y-1 text-left text-slate-300 text-left text-left text-left text-left">
-                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left">Ruolo</label>
-                                            <select className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left text-left" value={newUserForm.role} onChange={e => setNewUserForm({...newUserForm, role: e.target.value})}>
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left text-left text-left">Password</label>
+                                            <input required type="text" className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left text-left text-left text-left" value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
+                                        </div>
+                                        <div className="space-y-1 text-left text-slate-300 text-left text-left text-left text-left text-left text-left">
+                                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2 text-left text-left text-left text-left text-left text-left text-left">Ruolo</label>
+                                            <select className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 text-white font-bold text-left text-left text-left text-left text-left text-left text-left text-left" value={newUserForm.role} onChange={e => setNewUserForm({...newUserForm, role: e.target.value})}>
                                                 <option value="user">Cliente</option>
                                                 <option value="admin">Amministratore</option>
                                             </select>
                                         </div>
-                                        <div className="flex gap-2 text-white text-left text-left">
-                                            <button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg btn-active text-center text-center text-center"> {editingUser ? "Salva" : "Crea"} </button>
-                                            {editingUser && <button onClick={() => {setEditingUser(null); setNewUserForm({email:'', password:'', role:'user'});}} className="bg-slate-700 text-white px-6 rounded-2xl font-black uppercase shadow-lg text-center text-center text-center text-center">X</button>}
+                                        <div className="flex gap-2 text-white text-left text-left text-left">
+                                            <button onClick={handleSaveUser} className="flex-1 bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg btn-active text-center text-center text-center text-center text-center"> {editingUser ? "Salva" : "Crea"} </button>
+                                            {editingUser && <button onClick={() => {setEditingUser(null); setNewUserForm({email:'', password:'', role:'user'});}} className="bg-slate-700 text-white px-6 rounded-2xl font-black uppercase shadow-lg text-center text-center text-center text-center text-center text-center">X</button>}
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4 text-left text-left text-left">
-                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left text-left text-left">Gestione Account</h3>
-                                        <div className="grid gap-3 text-left text-left text-left text-left">
+                                    <div className="space-y-4 text-left text-left text-left text-left text-left">
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest text-slate-400 ml-2 text-left text-left text-left text-left text-left">Gestione Account</h3>
+                                        <div className="grid gap-3 text-left text-left text-left text-left text-left text-left">
                                             {allUsers.map(u => {
                                                 const showPass = showPassMap[u.id];
                                                 return (
-                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left text-left text-left text-left">
-                                                        <div className="flex flex-col gap-1 text-left text-slate-900 text-left text-left">
-                                                            <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left text-left text-left">{String(u.email || "")}</p>
-                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left text-left text-left">
-                                                                <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left text-left text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left text-left text-left'}`}>{String(u.role || "user")}</span>
-                                                                <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left text-center text-center"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
-                                                                <span className="text-[9px] text-slate-400 font-black text-left text-left text-left text-left">{showPass ? String(u.password) : '••••••••'}</span>
+                                                    <div key={u.id} className="bg-white border-2 border-slate-100 p-5 rounded-3xl flex justify-between items-center shadow-sm hover:border-blue-200 transition-all text-slate-900 text-left text-left text-left text-left text-left text-left text-left">
+                                                        <div className="flex flex-col gap-1 text-left text-slate-900 text-left text-left text-left">
+                                                            <p className="font-black text-sm text-slate-800 leading-none truncate max-w-[160px] lowercase text-left text-left text-left text-left text-left text-left">{String(u.email || "")}</p>
+                                                            <div className="flex items-center gap-2 mt-1 text-slate-900 text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                                                <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${u.role === 'admin' ? 'bg-blue-600 border-blue-600 text-white text-left text-left text-left text-left text-left' : 'bg-slate-100 border-slate-200 text-slate-500 text-left text-left text-left text-left text-left'}`}>{String(u.role || "user")}</span>
+                                                                <button onClick={() => setShowPassMap(p => ({...p, [u.id]: !showPass}))} className="text-slate-300 hover:text-slate-500 text-left text-center text-center text-center text-center text-center"><Icon name={showPass ? "EyeOff" : "Eye"} size={14} /></button>
+                                                                <span className="text-[9px] text-slate-400 font-black text-left text-left text-left text-left text-left text-left">{showPass ? String(u.password) : '••••••••'}</span>
                                                             </div>
                                                         </div>
-                                                        <div className="flex gap-1 text-slate-900 text-left text-left text-left text-left">
-                                                            <button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center text-center"><Icon name="Edit" size={16}/></button>
-                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-red-500 text-center text-center text-center text-center text-center text-center"><Icon name="Trash2" size={16}/></button>
+                                                        <div className="flex gap-1 text-slate-900 text-left text-left text-left text-left text-left text-left text-left">
+                                                            <button onClick={() => startEditUser(u)} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-blue-600 text-center text-center text-center text-center text-center text-center text-center"><Icon name="Edit" size={16}/></button>
+                                                            <button onClick={async () => { if(window.confirm("Rimuovere?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-2.5 bg-red-50 text-red-500 rounded-xl active:scale-90 text-red-500 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center"><Icon name="Trash2" size={16}/></button>
                                                         </div>
                                                     </div>
                                                 );
@@ -696,50 +695,15 @@
                                 </div>
                             )}
 
-                            {/* AGGIUNGI / MODIFICA LOG (UNIFICATO) */}
-                            {(view === 'addLog' || view === 'editLog') && (
-                                <div className="space-y-6 animate-in text-left text-slate-900 text-left text-left">
-                                    <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-left text-left text-left">{view === 'addLog' ? 'Registra Lavoro' : 'Modifica Intervento'}</h2>
-                                    <form onSubmit={async (e) => {
-                                        e.preventDefault();
-                                        const currentData = view === 'addLog' ? newLog : editingLog;
-                                        const bikePath = `artifacts/${appId}/public/data/bikes/${selectedBikeId}`;
-                                        const logToSave = { 
-                                            ...currentData, 
-                                            km: Number(currentData.km), 
-                                            cost: Number(currentData.cost),
-                                            docLink: cryptoUtils.encrypt(currentData.docLink, String(activeBike.userEmail)) 
-                                        };
-                                        if (view === 'addLog') {
-                                            await db.collection(`${bikePath}/logs`).add({ ...logToSave, createdAt: new Date().toISOString() });
-                                        } else {
-                                            await db.doc(`${bikePath}/logs/${editingLog.id}`).update(logToSave);
-                                        }
-                                        if (Number(currentData.km) > (Number(activeBike?.odometer) || 0)) await db.doc(bikePath).update({ odometer: Number(currentData.km) });
-                                        setView('history'); showToast("Salvato!");
-                                    }} className="space-y-4 bg-slate-900 text-white p-7 rounded-[2.5rem] shadow-xl text-left border border-slate-800 text-left text-left text-left">
-                                        <div className="space-y-1 text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left">Tipo Intervento</label><input required className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.type : editingLog.type} onChange={e => view === 'addLog' ? setNewLog({...newLog, type: e.target.value}) : setEditingLog({...editingLog, type: e.target.value})} placeholder="Es. Tagliando" /></div>
-                                        <div className="space-y-3 pt-2 text-left text-left text-left text-left text-left text-left">
-                                            <div className="flex justify-between items-center text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left">Voci Intervento</label><button type="button" onClick={() => { if(view==='addLog') setNewLog({...newLog, items: [...newLog.items, '']}); else setEditingLog({...editingLog, items: [...editingLog.items, '']}); }} className="text-orange-500 text-[10px] font-black uppercase active:scale-90 text-center text-center text-center text-center text-center text-center text-center">+ Aggiungi</button></div>
-                                            {(view === 'addLog' ? newLog.items : editingLog.items).map((item, idx) => (
-                                                <div key={idx} className="flex gap-2 animate-in text-left text-left text-left text-left text-left text-left text-left"><input required className="flex-1 p-3.5 bg-slate-800 rounded-xl text-white outline-none text-xs border border-slate-700 text-left text-left text-left text-left text-left text-left" value={item} onChange={e => { const u = [...(view==='addLog'?newLog.items:editingLog.items)]; u[idx] = e.target.value; if(view==='addLog') setNewLog({...newLog, items: u}); else setEditingLog({...editingLog, items: u}); }} placeholder={`Voce ${idx+1}`} />{(view==='addLog'?newLog.items:editingLog.items).length > 1 && <button type="button" onClick={() => { const u = [...(view==='addLog'?newLog.items:editingLog.items)]; u.splice(idx,1); if(view==='addLog') setNewLog({...newLog, items: u}); else setEditingLog({...editingLog, items: u}); }} className="text-red-400 p-2 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center"><Icon name="MinusCircle" size={20}/></button>}</div>
-                                            ))}
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3 pt-2 text-left text-left text-left text-left text-left text-left">
-                                            <div className="space-y-1 text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left">Km</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.km : editingLog.km} onChange={e => view === 'addLog' ? setNewLog({...newLog, km: e.target.value}) : setEditingLog({...editingLog, km: e.target.value})} /></div>
-                                            <div className="space-y-1 text-left text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left">Costo €</label><input required type="number" className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.cost : editingLog.cost} onChange={e => view === 'addLog' ? setNewLog({...newLog, cost: e.target.value}) : setEditingLog({...editingLog, cost: e.target.value})} /></div>
-                                        </div>
-                                        <div className="space-y-1 pt-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">Data</label><input required type="date" className="w-full p-4 bg-slate-800 rounded-xl text-white font-bold text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.date : editingLog.date} onChange={e => view === 'addLog' ? setNewLog({...newLog, date: e.target.value}) : setEditingLog({...editingLog, date: e.target.value})} /></div>
-                                        <div className="space-y-1 pt-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">Link Fattura/PDF</label><input className="w-full p-4 bg-slate-800 rounded-xl text-white outline-none border border-slate-700 font-bold text-xs text-blue-400 italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left" value={view === 'addLog' ? newLog.docLink : editingLog.docLink} onChange={e => view === 'addLog' ? setNewLog({...newLog, docLink: e.target.value}) : setEditingLog({...editingLog, docLink: e.target.value})} placeholder="Link Drive/Dropbox..." /></div>
-                                        <button className="w-full bg-orange-500 text-white p-5 rounded-2xl font-black uppercase shadow-lg mt-4 btn-active text-center text-center text-center text-center text-center text-center text-center text-center italic text-center text-center text-center text-center text-center">Salva Intervento</button>
-                                    </form>
-                                </div>
-                            )}
-
                         </main>
 
                         <BottomNav view={view} setView={setView} activeBike={activeBike} />
-                        {updateStatus && <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-50 animate-in slide-in-from-bottom-4 flex items-center gap-2 text-left text-white text-left text-white italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left" /> {String(updateStatus)}</div>}
+                        {updateStatus && (
+                            <div className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full font-black text-[10px] uppercase shadow-2xl z-50 animate-in slide-in-from-bottom-4 flex items-center gap-2">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                {String(updateStatus)}
+                            </div>
+                        )}
                     </div>
                 </div>
             );
