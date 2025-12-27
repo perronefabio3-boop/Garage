@@ -72,7 +72,7 @@ const Modal = ({ isOpen, title, message, onConfirm, onCancel, variant = "danger"
         <p className="text-sm text-slate-500 font-medium">{String(message)}</p>
         <div className="flex flex-col gap-2 pt-2">
           <button onClick={onConfirm} className={`w-full ${variant === 'danger' ? 'bg-red-500' : 'bg-blue-600'} text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-transform italic`}>Conferma</button>
-          <button onClick={onCancel} className="w-full bg-slate-100 text-slate-400 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 transition-transform italic">Annulla</button>
+          <button onClick={onCancel} className="w-full bg-slate-100 text-slate-400 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 transition-transform italic text-slate-400">Annulla</button>
         </div>
       </div>
     </div>
@@ -325,8 +325,8 @@ export default function App() {
             <div className="p-6 space-y-8 animate-in text-left text-slate-900">
                 <h2 className="text-3xl font-black uppercase italic tracking-tighter">Admin Panel</h2>
                 <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 text-left">
-                    <p className="font-black text-blue-800 text-[10px] uppercase">Nota Tecnica GitHub</p>
-                    <p className="text-[11px] text-blue-600 mt-2 font-medium">Se il login fallisce su GitHub, aggiungi il dominio nelle impostazioni di Authentication {"->"} Authorized domains nella console di Firebase.</p>
+                    <p className="font-black text-blue-800 text-[10px] uppercase">Nota Tecnica Domini</p>
+                    <p className="text-[11px] text-blue-600 mt-2 font-medium">L'accesso è configurato per i domini autorizzati {"→"} GitHub Pages / Vercel nelle impostazioni di Authentication della console Firebase.</p>
                 </div>
             </div>
           )}
