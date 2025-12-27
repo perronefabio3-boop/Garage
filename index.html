@@ -197,6 +197,7 @@ export default function App() {
         const legacyUser = allUsers.find(u => u.email.toLowerCase() === em && u.password === pw);
         if (legacyUser) {
             try {
+                // Trovato nel vecchio db -> Creiamo account ufficiale su Google
                 const newCredential = await createUserWithEmailAndPassword(auth, em, pw);
                 setSession({ ...legacyUser, email: em, uid: newCredential.user.uid });
                 setView('garage');
@@ -253,10 +254,12 @@ export default function App() {
 
   // --- RENDER ---
 
-  if (loading) return <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-orange-500 font-black uppercase gap-4">
-    <Loader2 className="animate-spin" size={40} />
-    Caricamento Sicuro...
-  </div>;
+  if (loading) return (
+    <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-orange-500 font-black uppercase gap-4">
+        <Loader2 className="animate-spin" size={40} />
+        Caricamento Sicuro...
+    </div>
+  );
 
   return (
     <div className="app-shell text-left text-slate-900 bg-white min-h-screen">
@@ -323,7 +326,7 @@ export default function App() {
                 <h2 className="text-3xl font-black uppercase italic tracking-tighter">Admin Panel</h2>
                 <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100 text-left">
                     <p className="font-black text-blue-800 text-[10px] uppercase">Nota Tecnica GitHub</p>
-                    <p className="text-[11px] text-blue-600 mt-2 font-medium">Se il login fallisce su GitHub, aggiungi il dominio nelle impostazioni di Authentication {"→"} Authorized domains nella console di Firebase.</p>
+                    <p className="text-[11px] text-blue-600 mt-2 font-medium">Se il login fallisce su GitHub, aggiungi il dominio nelle impostazioni di Authentication {"->"} Authorized domains nella console di Firebase.</p>
                 </div>
             </div>
           )}
