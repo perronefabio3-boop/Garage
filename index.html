@@ -15,7 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
-    <!-- EmailJS: SDK per invio email tramite Google Workspace -->
+    <!-- EmailJS: SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <!-- Firebase SDK Compat -->
@@ -25,13 +25,7 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
-        body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; padding: 0; 
-            background-color: #f1f5f9; 
-            -webkit-tap-highlight-color: transparent; 
-            overflow: hidden; 
-        }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; overflow: hidden; }
         .animate-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -50,7 +44,7 @@
         const { useState, useEffect, useCallback, useMemo } = React;
 
         // --- COSTANTI E CONFIGURAZIONE ---
-        const APP_VERSION = "1.5.9";
+        const APP_VERSION = "1.6.0";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
         const SECRET_KEY = "GarageSnoopySafeKey2025!SuperSecret"; 
@@ -65,20 +59,18 @@
             appId: "1:72192698630:web:db80bd0150f62ab9199687"
         };
 
-        // --- INSERISCI QUI I TUOI CODICI EMAILJS (vedi codici_emailjs.md) ---
+        // --- INSERISCI QUI I TUOI CODICI EMAILJS ---
         const EMAILJS_CONFIG = {
-            serviceId: "service_8m9z21u",
-            templateId: "template_hgyfzbg",
-            publicKey: "nIaNMHWFrmL1ZQE4j"
+            serviceId: "YOUR_SERVICE_ID",
+            templateId: "YOUR_TEMPLATE_ID",
+            publicKey: "YOUR_PUBLIC_KEY"
         };
 
-        // Inizializzazione Firebase
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         const appId = "garage_snoopy_final";
 
-        // --- UTILITY CRITTOGRAFIA ---
         const cryptoUtils = {
             encrypt: (text, email = "") => {
                 const val = String(text || "").trim();
@@ -96,7 +88,6 @@
             }
         };
 
-        // --- ICONE SVG ---
         const Icon = ({ name, size = 24, className = "" }) => {
             const icons = {
                 Plus: <path d="M12 5v14M5 12h14"/>,
@@ -108,7 +99,7 @@
                 Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
                 Search: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="21" y1="21" y2="16.65"/></>,
                 Bike: <><circle cx="18.5" cy="17.5" r="2.5"/><circle cx="5.5" cy="17.5" r="2.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></>,
-                UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/></>,
+                UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></>,
                 Mail: <><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>,
                 Download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>,
                 Alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>
@@ -119,8 +110,6 @@
                 </svg>
             );
         };
-
-        // --- COMPONENTI UI ---
 
         function Header({ setView, view, onBack, session, onLogout }) {
             const isAdmin = session?.role === 'admin' || session?.email === ADMIN_EMAIL;
@@ -163,8 +152,6 @@
                 </nav>
             );
         }
-
-        // --- APP CORE ---
 
         function App() {
             const [user, setUser] = useState(null);
@@ -224,7 +211,7 @@
                             const newCred = await auth.createUserWithEmailAndPassword(em, pw);
                             setSession({ ...legacy, email: em, uid: newCred.user.uid });
                             setView('garage');
-                            showToast("Account migrato correttamente! ✓");
+                            showToast("Account migrato a Google! ✓");
                         } catch (migErr) { setLoginError("Password min. 6 caratteri"); }
                     } else if (em === ADMIN_EMAIL && pw === ADMIN_PASS) {
                         setSession({ email: em, role: 'admin' }); setView('garage');
@@ -234,18 +221,20 @@
 
             const handleAddUser = async (e) => {
                 e.preventDefault();
-                if (!newUserForm.email || !newUserForm.password) return;
+                const targetEmail = newUserForm.email.trim();
+                if (!targetEmail || !newUserForm.password) return;
                 try {
                     const bPath = `artifacts/${appId}/public/data/users`;
                     await db.collection(bPath).add({ ...newUserForm, createdAt: new Date().toISOString() });
                     
                     if (EMAILJS_CONFIG.publicKey !== "YOUR_PUBLIC_KEY") {
+                        // Inviamo l'email specificando user_email come destinatario variabile
                         emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
-                            user_email: newUserForm.email,
+                            user_email: targetEmail,
                             user_password: newUserForm.password,
                         }, EMAILJS_CONFIG.publicKey)
-                        .then(() => showToast("Account creato ed Email inviata! ✓"))
-                        .catch(() => showToast("Account creato, errore invio Email."));
+                        .then(() => showToast(`Inviata a: ${targetEmail} ✓`))
+                        .catch(() => showToast("Account creato, ma verifica To Email su EmailJS."));
                     } else {
                         showToast("Account salvato in Database! ✓");
                     }
@@ -279,7 +268,7 @@
                 return list;
             }, [bikes, session, searchQuery]);
 
-            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-orange-500 font-black uppercase text-xl italic tracking-widest">Inizializzazione Pro...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-orange-500 font-black uppercase text-xl italic tracking-widest text-center">Garage Loading...</div>;
 
             return (
                 <div className="app-shell text-left text-slate-900">
@@ -289,7 +278,7 @@
                         {view === 'login' && (
                             <div className="p-8 pt-16 space-y-12 animate-in text-center">
                                 <div className="mx-auto w-fit border-2 border-orange-500 rounded-full p-6 bg-white shadow-xl text-orange-500 text-center"><Icon name="Bike" size={80} /></div>
-                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center">Garage Fleet Pro</h2>
+                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-slate-900 text-center text-center">Garage Fleet Pro</h2>
                                 <form onSubmit={handleLogin} className="space-y-4 px-4 text-left">
                                     <input required type="email" placeholder="Email Account" className="w-full p-5 bg-white border-2 border-slate-100 rounded-3xl font-bold focus:border-orange-500 outline-none" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} />
                                     <input required type="password" placeholder="Password" className="w-full p-5 bg-white border-2 border-slate-100 rounded-3xl font-bold focus:border-orange-500 outline-none" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} />
@@ -304,20 +293,20 @@
                                 <div className="p-6 bg-slate-50 border-b border-slate-100 text-left">
                                     <h2 className="text-4xl font-black uppercase italic leading-none text-slate-900 text-left">Garage</h2>
                                     <div className="relative mt-4">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="Search" size={18} /></div>
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-center text-center"><Icon name="Search" size={18} /></div>
                                         <input className="w-full bg-white border-2 border-slate-100 rounded-2xl p-4 pl-12 font-bold outline-none text-sm shadow-sm" placeholder="Cerca..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                                     </div>
                                 </div>
                                 <div className="p-5 grid gap-4 text-left">
                                     {visibleBikes.map(b => (
-                                        <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer btn-active hover:border-orange-200 group text-left">
+                                        <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="bg-white border-2 border-slate-100 p-7 rounded-[3rem] shadow-sm flex justify-between items-center cursor-pointer btn-active hover:border-orange-200 group text-left text-slate-900">
                                             <div className="text-left">
-                                                <h3 className="font-black uppercase italic text-xl leading-none mb-1">{String(b.model || "")}</h3>
-                                                <p className="text-[9px] font-black border border-slate-200 bg-slate-100 px-2 py-0.5 rounded-lg w-fit mb-2">{String(b.targa)}</p>
-                                                {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 opacity-60 lowercase">{String(b.userEmail)}</p>}
-                                                <p className="text-slate-400 font-bold text-[11px] mt-1 italic">{(Number(b.odometer) || 0).toLocaleString()} KM</p>
+                                                <h3 className="font-black uppercase italic text-xl leading-none mb-1 text-left">{String(b.model || "")}</h3>
+                                                <p className="text-[9px] font-black border border-slate-200 bg-slate-100 px-2 py-0.5 rounded-lg w-fit mb-2 text-left">{String(b.targa)}</p>
+                                                {session.role === 'admin' && <p className="text-[9px] font-bold text-orange-500 opacity-60 lowercase text-left">{String(b.userEmail)}</p>}
+                                                <p className="text-slate-400 font-bold text-[11px] mt-1 italic text-left">{(Number(b.odometer) || 0).toLocaleString()} KM</p>
                                             </div>
-                                            <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors" />
+                                            <Icon name="Bike" size={32} className="text-slate-100 group-hover:text-orange-500 transition-colors text-center" />
                                         </div>
                                     ))}
                                 </div>
@@ -328,13 +317,14 @@
                             <div className="p-6 space-y-8 animate-in text-left text-slate-900 text-left">
                                 <div className="flex justify-between items-center text-left">
                                     <h2 className="text-3xl font-black uppercase italic tracking-tighter text-left">Admin Panel</h2>
-                                    <button onClick={handleExportExcel} className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg active:scale-95"><Icon name="Download" size={18}/></button>
+                                    <button onClick={handleExportExcel} className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg active:scale-95 text-center"><Icon name="Download" size={18}/></button>
                                 </div>
-                                <div className="p-7 rounded-[2.5rem] space-y-4 shadow-xl border bg-slate-900 text-white text-left">
+                                <div className="p-7 rounded-[2.5rem] space-y-4 shadow-xl border bg-slate-900 text-white text-left text-left">
                                     <h3 className="font-black uppercase text-xs text-orange-500 flex items-center gap-2"><Icon name="UserPlus" size={18}/> Abilita Cliente</h3>
+                                    <p className="text-[9px] text-slate-400 leading-tight">Nota: Su EmailJS imposta il campo "To Email" come <strong>{"{{user_email}}"}</strong> per spedire al cliente invece che a te.</p>
                                     <input required className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 font-bold text-white text-left" value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} placeholder="Email Account" />
                                     <input required className="w-full p-4 bg-slate-800 rounded-xl outline-none border border-slate-700 font-bold text-white text-left" value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} placeholder="Password Temporanea" />
-                                    <button onClick={handleAddUser} className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase shadow-lg active:scale-95 italic text-white flex items-center justify-center gap-2">
+                                    <button onClick={handleAddUser} className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase shadow-lg active:scale-95 italic text-white flex items-center justify-center gap-2 text-center text-center">
                                         <Icon name="Mail" size={18}/> Crea ed Invia Mail
                                     </button>
                                 </div>
@@ -343,7 +333,7 @@
                                     {allUsers.map(u => (
                                         <div key={u.id} className="p-5 bg-white border-2 border-slate-50 rounded-3xl shadow-sm flex justify-between items-center text-slate-900">
                                             <div className="text-left text-slate-900"><p className="font-black text-sm lowercase mb-1">{String(u.email)}</p><span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${u.role === 'admin' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>{String(u.role || 'cliente')}</span></div>
-                                            <button onClick={async () => { if(confirm("Eliminare account dal database?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-3 bg-red-50 text-red-500 rounded-2xl active:scale-90"><Icon name="Trash2" size={16}/></button>
+                                            <button onClick={async () => { if(confirm("Eliminare account definitivamente?")) await db.doc(`artifacts/${appId}/public/data/users/${u.id}`).delete(); }} className="p-3 bg-red-50 text-red-500 rounded-2xl active:scale-90 text-center"><Icon name="Trash2" size={16}/></button>
                                         </div>
                                     ))}
                                 </div>
@@ -352,14 +342,14 @@
 
                         {view === 'dashboard' && activeBike && (
                             <div className="p-6 space-y-6 animate-in text-left text-slate-900 text-left">
-                                <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl overflow-hidden relative border border-slate-800 text-left">
+                                <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl overflow-hidden relative border border-slate-800 text-left text-left">
                                     <h2 className="text-3xl font-black uppercase tracking-tight italic leading-none text-orange-500 text-left">{String(activeBike.model || "")}</h2>
                                     <p className="text-5xl font-black mt-4 text-left">{(Number(activeBike.odometer) || 0).toLocaleString()} <span className="text-sm opacity-40 uppercase">KM</span></p>
                                     <div className="absolute -right-10 -bottom-10 opacity-10 text-center text-white"><Icon name="Bike" size={200} /></div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 text-left text-slate-900 text-left text-left">
+                                <div className="grid grid-cols-2 gap-4 text-left text-slate-900 text-left text-left text-left">
                                     <div className="p-5 bg-white border-2 border-slate-100 rounded-[2.5rem] shadow-sm text-left"><p className="text-[9px] font-black uppercase text-slate-400 mb-1 text-left">Targa</p><p className="text-xl font-black">{String(activeBike.targa)}</p></div>
-                                    <div className="p-5 bg-white border-2 border-slate-100 rounded-[2.5rem] shadow-sm text-left"><p className="text-[9px] font-black uppercase text-slate-400 mb-1 text-left">Sicurezza</p><p className="text-xl font-black text-emerald-600 flex items-center gap-1"><Icon name="Shield" size={16}/> Attiva</p></div>
+                                    <div className="p-5 bg-white border-2 border-slate-100 rounded-[2.5rem] shadow-sm text-left"><p className="text-[9px] font-black uppercase text-slate-400 mb-1 text-left">Sicurezza</p><p className="text-xl font-black text-emerald-600 flex items-center gap-1 text-left"><Icon name="Shield" size={16}/> Attiva</p></div>
                                 </div>
                             </div>
                         )}
@@ -368,7 +358,7 @@
                     {session && <BottomNav view={view} setView={setView} />}
                     
                     {updateStatus && (
-                        <div className="toast-container animate-in text-left">
+                        <div className="toast-container animate-in text-left text-white text-left">
                             <div className="p-4 bg-slate-900 text-white rounded-2xl font-bold shadow-2xl flex items-center gap-3 border border-slate-700 text-left text-left text-left">
                                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse text-left" />
                                 <span className="text-xs uppercase tracking-widest text-left">{String(updateStatus)}</span>
