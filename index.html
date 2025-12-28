@@ -42,9 +42,9 @@
         const { useState, useEffect, useMemo, useCallback } = React;
 
         // ==========================================
-        // 1. CONFIGURAZIONE (INSERISCI I TUOI CODICI)
+        // 1. CONFIGURAZIONE
         // ==========================================
-        const APP_VERSION = "1.7.5";
+        const APP_VERSION = "1.7.6";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
         const SECRET_KEY = "GarageSnoopySafeKey2025!SuperSecret"; 
@@ -59,13 +59,11 @@
             appId: "1:72192698630:web:db80bd0150f62ab9199687"
         };
 
-        // --- INCOLLA QUI I CODICI DI EMAILJS ---
         const EMAILJS_CONFIG = {
-            serviceId: "service_8m9z21u", // Esempio: service_xxxx
-            templateId: "template_hgyfzbg", // Esempio: template_xxxx
-            publicKey: "nIaNMHWFrmL1ZQE4j"    // Esempio: il codice lungo in Account -> API Keys
+            serviceId: "nIaNMHWFrmL1ZQE4j",
+            templateId: "template_hgyfzbg",
+            publicKey: "YOUR_PUBLIC_KEY"
         };
-        // ==========================================
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -94,19 +92,19 @@
             const [session, setSession] = useState(null);
             const [loading, setLoading] = useState(true);
             
-            // Dati
+            // Dati dal Database
             const [bikes, setBikes] = useState([]);
             const [allLogs, setAllLogs] = useState([]);
             const [allUsers, setAllUsers] = useState([]);
             
-            // Selezione e UI
+            // Selezione e Stati Locali
             const [selectedBikeId, setSelectedBikeId] = useState(null);
             const [activeBikeRaw, setActiveBikeRaw] = useState(null);
             const [searchQuery, setSearchQuery] = useState("");
             const [status, setStatus] = useState("");
             const [confirmDelete, setConfirmDelete] = useState(null);
             
-            // Form
+            // Form Stati
             const [loginForm, setLoginForm] = useState({ email: '', password: '' });
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user' });
             const [newBike, setNewBike] = useState({ model: '', targa: '', odometer: '', lastServiceKm: '', lastServiceDate: '', serviceIntervalKm: '10000', serviceIntervalMonths: '12' });
@@ -127,13 +125,16 @@
                 return () => unsub();
             }, []);
 
-            // SINCRONIZZAZIONE DATI (Rinforzata per Build 1.7.5)
+            // SINCRONIZZAZIONE DATI REALE-TIME
             useEffect(() => {
                 if (!user) return;
                 const pathBase = `artifacts/${appId}/public/data`;
                 
                 const unsubB = db.collection(`${pathBase}/bikes`).onSnapshot(s => setBikes(s.docs.map(d => ({...d.data(), id: d.id}))));
-                const unsubL = db.collection(`${pathBase}/logs`).onSnapshot(s => setAllLogs(s.docs.map(d => ({...d.data(), id: d.id}))));
+                const unsubL = db.collection(`${pathBase}/logs`).onSnapshot(s => {
+                    const data = s.docs.map(d => ({...d.data(), id: d.id}));
+                    setAllLogs(data);
+                });
                 const unsubU = db.collection(`${pathBase}/users`).onSnapshot(s => {
                     const list = s.docs.map(d => ({...d.data(), id: d.id}));
                     setAllUsers(list);
@@ -178,10 +179,15 @@
 
             const handleSaveLog = async (e) => {
                 e.preventDefault();
-                if (!selectedBikeId) { showToast("Scegli un veicolo!"); return; }
+                if (!selectedBikeId) { showToast("Seleziona una moto!"); return; }
                 try {
                     const path = `artifacts/${appId}/public/data/logs`;
-                    const data = { ...newLog, bikeId: selectedBikeId, km: Number(newLog.km), cost: Number(newLog.cost) };
+                    const data = { 
+                        ...newLog, 
+                        bikeId: selectedBikeId, 
+                        km: Number(newLog.km), 
+                        cost: Number(newLog.cost) 
+                    };
                     if (editingLog) {
                         await db.doc(`${path}/${editingLog.id}`).update(data);
                         showToast("Aggiornato ✓");
@@ -210,15 +216,15 @@
             };
 
             const logs = useMemo(() => {
-                let filtered = allLogs || [];
-                if (selectedBikeId) filtered = filtered.filter(l => l.bikeId === selectedBikeId);
+                if (!allLogs) return [];
+                let filtered = allLogs;
+                if (selectedBikeId) filtered = allLogs.filter(l => l.bikeId === selectedBikeId);
                 return filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
             }, [allLogs, selectedBikeId]);
 
             const activeBike = useMemo(() => {
                 if (!activeBikeRaw) return null;
-                const b = { ...activeBikeRaw };
-                return b;
+                return { ...activeBikeRaw };
             }, [activeBikeRaw]);
 
             const totalSpent = useMemo(() => logs.reduce((s, l) => s + (Number(l.cost) || 0), 0), [logs]);
@@ -248,7 +254,7 @@
                             <h1 className="text-xl font-black italic uppercase text-orange-500 tracking-tighter cursor-pointer" onClick={() => session && setView('garage')}>Garage</h1>
                         </div>
                         <div className="flex gap-2">
-                            {isAdmin && <button onClick={() => setView('admin')} className={`p-2 rounded-lg ${view === 'admin' ? 'bg-blue-600 shadow-lg shadow-blue-600/30' : 'bg-slate-800 text-slate-400'}`}><Icon name="shield-alt"/></button>}
+                            {isAdmin && <button onClick={() => setView('admin')} className={`p-2 rounded-lg ${view === 'admin' ? 'bg-blue-600 shadow-lg' : 'bg-slate-800 text-slate-400'}`}><Icon name="shield-alt"/></button>}
                             {session && <button onClick={() => { auth.signOut(); setSession(null); setView('login'); }} className="p-2 bg-slate-800 text-red-400 rounded-lg"><Icon name="sign-out-alt"/></button>}
                         </div>
                     </header>
@@ -269,13 +275,13 @@
 
                         {view === 'garage' && session && (
                             <div className="p-5 animate-in space-y-4">
-                                <div className="flex justify-between items-end mb-6 text-left">
+                                <div className="flex justify-between items-end mb-6">
                                     <h2 className="text-4xl font-black italic uppercase leading-none">Garage</h2>
                                     {isAdmin && <button onClick={() => setView('addBike')} className="p-4 bg-orange-500 rounded-2xl shadow-lg active:scale-90 text-white"><Icon name="plus"/></button>}
                                 </div>
-                                <div className="relative mb-6 text-left">
+                                <div className="relative mb-6">
                                     <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"/>
-                                    <input className="w-full p-4 pl-12 bg-slate-800 border border-slate-700 rounded-2xl text-sm outline-none text-white text-left" placeholder="Cerca targa o modello..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
+                                    <input className="w-full p-4 pl-12 bg-slate-800 border border-slate-700 rounded-2xl text-sm outline-none text-white" placeholder="Cerca targa o modello..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}/>
                                 </div>
                                 {filteredBikes.map(b => (
                                     <div key={b.id} onClick={() => { setSelectedBikeId(b.id); setView('dashboard'); }} className="p-6 bg-slate-800 rounded-[2.5rem] flex justify-between items-center border border-slate-700 hover:border-orange-500/50 transition-all cursor-pointer group active:scale-[0.98]">
@@ -290,7 +296,6 @@
                                         </div>
                                     </div>
                                 ))}
-                                {filteredBikes.length === 0 && <p className="text-center py-20 text-slate-600 font-bold uppercase text-xs italic">Garage Vuoto</p>}
                             </div>
                         )}
 
@@ -298,10 +303,10 @@
                             <div className="p-6 animate-in space-y-6">
                                 <div className="bg-slate-900 p-8 rounded-[3rem] border border-slate-800 relative overflow-hidden shadow-2xl text-left">
                                     <div className="flex justify-between items-start relative z-10">
-                                        <h2 className="text-3xl font-black uppercase italic text-orange-500 text-left">{activeBike.model}</h2>
+                                        <h2 className="text-3xl font-black uppercase italic text-orange-500">{activeBike.model}</h2>
                                         {isAdmin && <button onClick={() => { setEditingBike({...activeBikeRaw}); setView('editBike'); }} className="p-2 text-blue-400/50 hover:text-blue-400"><Icon name="edit"/></button>}
                                     </div>
-                                    <p className="text-6xl font-black mt-4 text-white text-left">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm text-slate-500 uppercase">KM</span></p>
+                                    <p className="text-6xl font-black mt-4 text-white">{(Number(activeBike.odometer)).toLocaleString()} <span className="text-sm text-slate-500 uppercase">KM</span></p>
                                     <Icon name="motorcycle" size="6x" className="absolute -right-8 -bottom-8 opacity-5"/>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -330,7 +335,7 @@
                                                 </div>
                                                 <div className="flex items-center gap-3 text-right">
                                                     <div className="text-right">
-                                                        <p className="font-black text-white text-left">{(Number(l.km)).toLocaleString()} KM</p>
+                                                        <p className="font-black text-white">{(Number(l.km)).toLocaleString()} KM</p>
                                                         <p className="text-emerald-400 font-black text-lg">€ {l.cost}</p>
                                                     </div>
                                                     {isAdmin && <button onClick={async () => { if(confirm("Eliminare log?")) await db.doc(`artifacts/garage_snoopy_final/public/data/logs/${l.id}`).delete(); }} className="p-3 bg-red-500/10 text-red-500 rounded-xl text-center"><Icon name="trash-alt"/></button>}
@@ -338,28 +343,8 @@
                                             </div>
                                         </div>
                                     ))}
-                                    {logs.length === 0 && <p className="text-center py-20 text-slate-600 font-bold uppercase text-xs italic text-center">Nessun lavoro registrato</p>}
+                                    {logs.length === 0 && <p className="text-center py-20 text-slate-600 font-bold uppercase text-xs italic">Nessun lavoro registrato</p>}
                                 </div>
-                            </div>
-                        )}
-
-                        {(view === 'addLog' || view === 'editLog') && (
-                            <div className="p-6 animate-in space-y-6 pb-40">
-                                <h2 className="text-3xl font-black italic uppercase text-white">{view === 'addLog' ? 'Nuovo Lavoro' : 'Modifica'}</h2>
-                                <form onSubmit={handleSaveLog} className="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 space-y-4 shadow-2xl text-left">
-                                    <input required placeholder="Tipo Intervento" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})}/>
-                                    <div className="space-y-3 pt-2 text-left">
-                                        <div className="flex justify-between items-center text-slate-500 font-black uppercase text-[10px] px-2 text-left"><span>Dettagli (Voci registro)</span><button type="button" onClick={() => setNewLog({...newLog, items: [...newLog.items, '']})} className="text-orange-500">+ VOCE</button></div>
-                                        {newLog.items.map((item, idx) => (
-                                            <div key={idx} className="flex gap-2 animate-in text-white"><input required className="flex-1 p-3.5 bg-slate-900 rounded-xl outline-none text-xs text-white text-left" value={item} onChange={e => { const u = [...newLog.items]; u[idx] = e.target.value; setNewLog({...newLog, items: u}); }} placeholder={`Voce ${idx+1}`} />{newLog.items.length > 1 && <button type="button" onClick={() => { const u = [...newLog.items]; u.splice(idx,1); setNewLog({...newLog, items: u}); }} className="text-red-500 p-2 text-center text-center"><Icon name="minus-circle"/></button>}</div>
-                                        ))}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 pt-2">
-                                        <input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" placeholder="KM" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})}/>
-                                        <input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" placeholder="COSTO €" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})}/>
-                                    </div>
-                                    <button className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white active:scale-95 transition-all mt-4 text-center">Salva Intervento</button>
-                                </form>
                             </div>
                         )}
 
@@ -370,24 +355,53 @@
                                     e.preventDefault();
                                     const curr = view === 'addBike' ? newBike : editingBike;
                                     const path = `artifacts/garage_snoopy_final/public/data/bikes`;
+                                    const dataToSave = {
+                                        ...curr,
+                                        odometer: Number(curr.odometer),
+                                        lastServiceKm: Number(curr.lastServiceKm),
+                                        serviceIntervalKm: Number(curr.serviceIntervalKm),
+                                        serviceIntervalMonths: Number(curr.serviceIntervalMonths)
+                                    };
                                     if (view === 'addBike') { 
-                                        await db.collection(path).add({...curr, odometer: Number(curr.odometer), userEmail: session.email, createdAt: new Date().toISOString()}); 
+                                        await db.collection(path).add({...dataToSave, userEmail: session.email, createdAt: new Date().toISOString()}); 
                                     } else { 
-                                        await db.doc(`${path}/${editingBike.id}`).update({...curr, odometer: Number(curr.odometer)}); 
+                                        await db.doc(`${path}/${editingBike.id}`).update(dataToSave); 
                                     }
                                     setView('garage'); showToast("Salvato ✓");
-                                }} className="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 space-y-4 shadow-2xl text-left">
-                                    <input required placeholder="Modello" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} />
-                                    <input required placeholder="Targa" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left uppercase" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value}) : setEditingBike({...editingBike, targa: e.target.value})} />
-                                    <input required type="number" placeholder="Chilometri" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.odometer : editingBike.odometer} onChange={e => view === 'addBike' ? setNewBike({...newBike, odometer: e.target.value}) : setEditingBike({...editingBike, odometer: e.target.value})} />
-                                    <button className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white text-center">Salva Veicolo</button>
+                                }} className="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 space-y-4 shadow-2xl">
+                                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Modello</label><input required className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} /></div>
+                                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Targa</label><input required className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left uppercase" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value}) : setEditingBike({...editingBike, targa: e.target.value})} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Km Totali</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.odometer : editingBike.odometer} onChange={e => view === 'addBike' ? setNewBike({...newBike, odometer: e.target.value}) : setEditingBike({...editingBike, odometer: e.target.value})} /></div>
+                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-orange-500 ml-2">Km Ultimo Tagl.</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.lastServiceKm : editingBike.lastServiceKm} onChange={e => view === 'addBike' ? setNewBike({...newBike, lastServiceKm: e.target.value}) : setEditingBike({...editingBike, lastServiceKm: e.target.value})} /></div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Intervallo Km</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.serviceIntervalKm : editingBike.serviceIntervalKm} onChange={e => view === 'addBike' ? setNewBike({...newBike, serviceIntervalKm: e.target.value}) : setEditingBike({...editingBike, serviceIntervalKm: e.target.value})} /></div>
+                                        <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Intervallo Mesi</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.serviceIntervalMonths : editingBike.serviceIntervalMonths} onChange={e => view === 'addBike' ? setNewBike({...newBike, serviceIntervalMonths: e.target.value}) : setEditingBike({...editingBike, serviceIntervalMonths: e.target.value})} /></div>
+                                    </div>
+                                    <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Data Ultimo Tagl.</label><input required type="date" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.lastServiceDate : editingBike.lastServiceDate} onChange={e => view === 'addBike' ? setNewBike({...newBike, lastServiceDate: e.target.value}) : setEditingBike({...editingBike, lastServiceDate: e.target.value})} /></div>
+                                    <button className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white active:scale-95 transition-all mt-4">Salva Veicolo</button>
+                                </form>
+                            </div>
+                        )}
+
+                        {view === 'addLog' && (
+                            <div className="p-6 animate-in space-y-6 pb-40 text-left">
+                                <h2 className="text-3xl font-black italic uppercase text-white">Nuovo Lavoro</h2>
+                                <form onSubmit={handleSaveLog} className="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 space-y-4 shadow-2xl">
+                                    <input required placeholder="Tipo Intervento" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={newLog.type} onChange={e => setNewLog({...newLog, type: e.target.value})}/>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" placeholder="KM" value={newLog.km} onChange={e => setNewLog({...newLog, km: e.target.value})}/>
+                                        <input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" placeholder="COSTO €" value={newLog.cost} onChange={e => setNewLog({...newLog, cost: e.target.value})}/>
+                                    </div>
+                                    <button className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white active:scale-95 transition-all mt-4">Salva Intervento</button>
                                 </form>
                             </div>
                         )}
 
                         {view === 'admin' && isAdmin && (
                             <div className="p-6 animate-in space-y-8 pb-40 text-left">
-                                <h2 className="text-3xl font-black italic uppercase text-white">Admin Panel</h2>
+                                <h2 className="text-3xl font-black italic uppercase text-white text-left">Admin Panel</h2>
                                 <div className={`p-7 rounded-[2.5rem] shadow-xl border space-y-4 transition-colors ${editingUser ? 'bg-blue-900 border-blue-700' : 'bg-slate-900 border-slate-800'}`}>
                                     <h3 className="font-black uppercase text-xs text-orange-500 ml-2">{editingUser ? "Modifica Cliente" : "Crea Accesso Cliente"}</h3>
                                     <input placeholder="Email Account" className="w-full p-4 bg-slate-800 border border-slate-700 rounded-xl outline-none text-white font-bold text-left" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})}/>
@@ -397,15 +411,15 @@
                                         if (editingUser) { await db.doc(`${path}/${editingUser.id}`).update(newUser); setEditingUser(null); }
                                         else { await db.collection(path).add({...newUser, createdAt: new Date().toISOString()}); }
                                         setNewUser({email:'', password:'', role:'user'}); showToast("Salvato ✓");
-                                    }} className="w-full bg-blue-600 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white text-center">Salva Credenziali</button>
+                                    }} className="w-full bg-blue-600 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white">Salva Credenziali</button>
                                 </div>
                                 <div className="space-y-3">
                                     {allUsers.map(u => (
                                         <div key={u.id} className="p-4 bg-white rounded-3xl flex justify-between items-center shadow-lg">
                                             <div className="flex-1 overflow-hidden"><p className="font-black text-sm text-slate-900 truncate">{u.email}</p><span className="text-[8px] font-black uppercase bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">{u.role}</span></div>
-                                            <div className="flex gap-2 text-center text-center">
-                                                <button onClick={() => { setEditingUser(u); setNewUser({email:u.email, password:u.password, role:u.role||'user'}); }} className="p-3 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-center"><Icon name="edit"/></button>
-                                                <button onClick={async () => { if(confirm("Eliminare?")) await db.doc(`artifacts/garage_snoopy_final/public/data/users/${u.id}`).delete(); }} className="p-3 bg-red-50 text-red-500 rounded-xl active:scale-90 text-center"><Icon name="trash-alt"/></button>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => { setEditingUser(u); setNewUser({email:u.email, password:u.password, role:u.role||'user'}); }} className="p-3 bg-blue-50 text-blue-600 rounded-xl active:scale-90"><Icon name="edit"/></button>
+                                                <button onClick={async () => { if(confirm("Eliminare?")) await db.doc(`artifacts/garage_snoopy_final/public/data/users/${u.id}`).delete(); }} className="p-3 bg-red-50 text-red-500 rounded-xl active:scale-90"><Icon name="trash-alt"/></button>
                                             </div>
                                         </div>
                                     ))}
@@ -432,9 +446,9 @@
                                 <div className="mx-auto w-fit p-4 bg-red-500/10 text-red-500 rounded-full text-center text-center"><Icon name="exclamation-triangle" size="2x"/></div>
                                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-white text-center">Elimina Veicolo?</h3>
                                 <p className="text-sm text-slate-400 font-medium text-center">Rimuovere definitivamente <strong>{confirmDelete.model}</strong>?</p>
-                                <div className="flex flex-col gap-2 pt-2 text-center">
-                                    <button onClick={() => handleDeleteBike(confirmDelete.id)} className="w-full bg-red-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 italic text-white text-center">Sì, Elimina Ora</button>
-                                    <button onClick={() => setConfirmDelete(null)} className="w-full bg-slate-700 text-slate-400 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 italic text-slate-400 text-center">Annulla</button>
+                                <div className="flex flex-col gap-2 pt-2 text-center text-white">
+                                    <button onClick={() => handleDeleteBike(confirmDelete.id)} className="w-full bg-red-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 italic">Sì, Elimina Ora</button>
+                                    <button onClick={() => setConfirmDelete(null)} className="w-full bg-slate-700 text-slate-400 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 italic">Annulla</button>
                                 </div>
                             </div>
                         </div>
