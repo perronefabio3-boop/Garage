@@ -44,7 +44,7 @@
         // ==========================================
         // 1. CONFIGURAZIONE
         // ==========================================
-        const APP_VERSION = "1.7.8";
+        const APP_VERSION = "1.7.9";
         const ADMIN_EMAIL = 'info@fabio-perrone.com';
         const ADMIN_PASS = 'prova';
         const SECRET_KEY = "GarageSnoopySafeKey2025!SuperSecret"; 
@@ -57,12 +57,6 @@
             storageBucket: "garage-fd19b.firebasestorage.app",
             messagingSenderId: "72192698630",
             appId: "1:72192698630:web:db80bd0150f62ab9199687"
-        };
-
-        const EMAILJS_CONFIG = {
-            serviceId: "YOUR_SERVICE_ID",
-            templateId: "YOUR_TEMPLATE_ID",
-            publicKey: "YOUR_PUBLIC_KEY"
         };
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -104,7 +98,7 @@
             const [status, setStatus] = useState("");
             const [confirmDelete, setConfirmDelete] = useState(null);
             
-            // Form
+            // Form Stati
             const [loginForm, setLoginForm] = useState({ email: '', password: '' });
             const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user' });
             const [newBike, setNewBike] = useState({ model: '', targa: '', odometer: '', lastServiceKm: '', lastServiceDate: '', serviceIntervalKm: '10000', serviceIntervalMonths: '12' });
@@ -125,7 +119,7 @@
                 return () => unsub();
             }, []);
 
-            // SINCRONIZZAZIONE DATI REALE-TIME
+            // SINCRONIZZAZIONE DATI REALE-TIME (Fix caricamento log)
             useEffect(() => {
                 if (!user) return;
                 const pathBase = `artifacts/garage_snoopy_final/public/data`;
@@ -166,7 +160,7 @@
                         const nc = await auth.createUserWithEmailAndPassword(em, pw);
                         setSession({ ...legacy, email: em, uid: nc.user.uid });
                         setView('garage');
-                        showToast("Account migrato ✓");
+                        showToast("Accesso Sicuro ✓");
                     } else if (em === ADMIN_EMAIL.toLowerCase() && pw === ADMIN_PASS) {
                         setSession({ email: em, role: 'admin' });
                         setView('garage');
@@ -176,7 +170,7 @@
 
             const handleSaveLog = async (e) => {
                 e.preventDefault();
-                if (!selectedBikeId) { showToast("Seleziona una moto!"); return; }
+                if (!selectedBikeId) { showToast("Scegli un veicolo!"); return; }
                 try {
                     const path = `artifacts/garage_snoopy_final/public/data/logs`;
                     const currentSource = editingLog || newLog;
@@ -205,8 +199,7 @@
 
             const handleDeleteBike = async (id) => {
                 try {
-                    const path = `artifacts/garage_snoopy_final/public/data/bikes/${id}`;
-                    await db.doc(path).delete();
+                    await db.doc(`artifacts/garage_snoopy_final/public/data/bikes/${id}`).delete();
                     setConfirmDelete(null);
                     setSelectedBikeId(null);
                     setView('garage');
@@ -240,7 +233,7 @@
                 return list;
             }, [bikes, session, isAdmin, searchQuery]);
 
-            if (loading) return <div className="h-screen flex items-center justify-center text-orange-500 font-black italic animate-pulse">GARAGE LOADING...</div>;
+            if (loading) return <div className="h-screen flex items-center justify-center text-orange-500 font-black italic animate-pulse text-center">CARICAMENTO GARAGE...</div>;
 
             return (
                 <div className="app-shell shadow-2xl">
@@ -263,14 +256,14 @@
                     <main className="scroll-container hide-scrollbar text-left">
                         {view === 'login' && (
                             <div className="p-8 pt-16 text-center animate-in">
-                                <div className="mx-auto w-fit p-6 bg-slate-800 rounded-full mb-8 shadow-2xl border border-slate-700"><Icon name="motorcycle" size="4x" className="text-orange-500"/></div>
+                                <div className="mx-auto w-fit p-6 bg-slate-800 rounded-full mb-8 shadow-2xl border border-slate-700 text-center"><Icon name="motorcycle" size="4x" className="text-orange-500"/></div>
                                 <h2 className="text-3xl font-black italic uppercase mb-8 text-slate-100">Area Riservata</h2>
                                 <form onSubmit={handleLogin} className="space-y-4">
                                     <input required type="email" placeholder="Email" className="w-full p-5 bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 ring-orange-500 text-white text-left" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})}/>
                                     <input required type="password" placeholder="Password" className="w-full p-5 bg-slate-800 border-none rounded-2xl outline-none focus:ring-2 ring-orange-500 text-white text-left" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})}/>
-                                    <button className="w-full bg-gradient-to-r from-orange-600 to-orange-400 p-5 rounded-2xl font-black uppercase italic shadow-lg active:scale-95 transition-all text-white">Accedi</button>
+                                    <button className="w-full bg-gradient-to-r from-orange-600 to-orange-400 p-5 rounded-2xl font-black uppercase italic shadow-lg active:scale-95 transition-all text-white">Entra nel Garage</button>
                                 </form>
-                                <p className="text-[10px] text-slate-500 mt-10 uppercase font-bold tracking-widest opacity-50">Build v{APP_VERSION}</p>
+                                <p className="text-[10px] text-slate-500 mt-10 uppercase font-bold tracking-widest opacity-50 text-center">Build v{APP_VERSION}</p>
                             </div>
                         )}
 
@@ -340,7 +333,7 @@
                                                         <p className="font-black text-white text-left">{(Number(l.km)).toLocaleString()} KM</p>
                                                         <p className="text-emerald-400 font-black text-lg text-left">€ {l.cost}</p>
                                                     </div>
-                                                    {isAdmin && <button onClick={() => { setEditingLog(l); setView('editLog'); }} className="p-3 bg-blue-500/10 text-blue-400 rounded-xl text-center"><Icon name="edit"/></button>}
+                                                    {isAdmin && <button onClick={() => { setEditingLog({...l}); setView('editLog'); }} className="p-3 bg-blue-500/10 text-blue-400 rounded-xl text-center"><Icon name="edit"/></button>}
                                                 </div>
                                             </div>
                                             {l.items && l.items.length > 0 && l.items[0] !== "" && (
@@ -350,7 +343,7 @@
                                             )}
                                         </div>
                                     ))}
-                                    {logs.length === 0 && <p className="text-center py-20 text-slate-600 font-bold uppercase text-xs italic">Nessun lavoro trovato</p>}
+                                    {logs.length === 0 && <p className="text-center py-20 text-slate-600 font-bold uppercase text-xs italic text-center">Nessun lavoro registrato</p>}
                                 </div>
                             </div>
                         )}
@@ -359,10 +352,13 @@
                             <div className="p-6 animate-in space-y-6 pb-40 text-left text-slate-100">
                                 <h2 className="text-3xl font-black italic uppercase text-white text-left">{view === 'addLog' ? 'Nuovo Lavoro' : 'Modifica'}</h2>
                                 <form onSubmit={handleSaveLog} className="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 space-y-4 shadow-2xl text-left">
-                                    <input required placeholder="Tipo Intervento" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addLog' ? newLog.type : editingLog.type} onChange={e => {
-                                        const val = e.target.value;
-                                        if(view==='addLog') setNewLog({...newLog, type: val}); else setEditingLog({...editingLog, type: val});
-                                    }}/>
+                                    <input required placeholder="Tipo Intervento" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" 
+                                        value={view === 'addLog' ? newLog.type : editingLog.type} 
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if(view==='addLog') setNewLog({...newLog, type: val}); else setEditingLog({...editingLog, type: val});
+                                        }}
+                                    />
                                     
                                     <div className="space-y-3 pt-2 text-left">
                                         <div className="flex justify-between items-center text-slate-500 font-black uppercase text-[10px] px-2 text-left text-left">
@@ -374,7 +370,7 @@
                                             }} className="text-orange-500 font-black">+ VOCE</button>
                                         </div>
                                         {(view === 'addLog' ? newLog.items : editingLog.items).map((item, idx) => (
-                                            <div key={idx} className="flex gap-2 animate-in text-white text-left text-left">
+                                            <div key={idx} className="flex gap-2 animate-in text-white text-left">
                                                 <input required className="flex-1 p-3.5 bg-slate-900 rounded-xl outline-none text-xs text-white text-left" 
                                                     value={item} 
                                                     onChange={e => { 
@@ -437,22 +433,22 @@
                                 }} className="bg-slate-800 p-8 rounded-[3rem] border border-slate-700 space-y-4 shadow-2xl text-left">
                                     <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Modello</label><input required className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.model : editingBike.model} onChange={e => view === 'addBike' ? setNewBike({...newBike, model: e.target.value}) : setEditingBike({...editingBike, model: e.target.value})} /></div>
                                     <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Targa</label><input required className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left uppercase text-left" value={view === 'addBike' ? newBike.targa : editingBike.targa} onChange={e => view === 'addBike' ? setNewBike({...newBike, targa: e.target.value}) : setEditingBike({...editingBike, targa: e.target.value})} /></div>
-                                    <div className="grid grid-cols-2 gap-4 text-left">
+                                    <div className="grid grid-cols-2 gap-4 text-left text-slate-100">
                                         <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Km Totali</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.odometer : editingBike.odometer} onChange={e => view === 'addBike' ? setNewBike({...newBike, odometer: e.target.value}) : setEditingBike({...editingBike, odometer: e.target.value})} /></div>
                                         <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-orange-500 ml-2">Km Ultimo Tagl.</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.lastServiceKm : editingBike.lastServiceKm} onChange={e => view === 'addBike' ? setNewBike({...newBike, lastServiceKm: e.target.value}) : setEditingBike({...editingBike, lastServiceKm: e.target.value})} /></div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-left">
-                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Intervallo Km</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.serviceIntervalKm : editingBike.serviceIntervalKm} onChange={e => view === 'addBike' ? setNewBike({...newBike, serviceIntervalKm: e.target.value}) : setEditingBike({...editingBike, serviceIntervalKm: e.target.value})} /></div>
-                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Intervallo Mesi</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.serviceIntervalMonths : editingBike.serviceIntervalMonths} onChange={e => view === 'addBike' ? setNewBike({...newBike, serviceIntervalMonths: e.target.value}) : setEditingBike({...editingBike, serviceIntervalMonths: e.target.value})} /></div>
+                                    <div className="grid grid-cols-2 gap-4 text-left text-slate-100">
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Ogni Km</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.serviceIntervalKm : editingBike.serviceIntervalKm} onChange={e => view === 'addBike' ? setNewBike({...newBike, serviceIntervalKm: e.target.value}) : setEditingBike({...editingBike, serviceIntervalKm: e.target.value})} /></div>
+                                        <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Ogni Mesi</label><input required type="number" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.serviceIntervalMonths : editingBike.serviceIntervalMonths} onChange={e => view === 'addBike' ? setNewBike({...newBike, serviceIntervalMonths: e.target.value}) : setEditingBike({...editingBike, serviceIntervalMonths: e.target.value})} /></div>
                                     </div>
-                                    <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Data Ultimo Tagl.</label><input required type="date" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left" value={view === 'addBike' ? newBike.lastServiceDate : editingBike.lastServiceDate} onChange={e => view === 'addBike' ? setNewBike({...newBike, lastServiceDate: e.target.value}) : setEditingBike({...editingBike, lastServiceDate: e.target.value})} /></div>
+                                    <div className="space-y-1 text-left"><label className="text-[10px] font-black uppercase text-slate-500 ml-2">Data Ultimo Tagl.</label><input required type="date" className="w-full p-4 bg-slate-900 rounded-2xl outline-none font-bold text-white text-left text-white" value={view === 'addBike' ? newBike.lastServiceDate : editingBike.lastServiceDate} onChange={e => view === 'addBike' ? setNewBike({...newBike, lastServiceDate: e.target.value}) : setEditingBike({...editingBike, lastServiceDate: e.target.value})} /></div>
                                     <button className="w-full bg-orange-500 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white active:scale-95 transition-all mt-4 text-center">Salva Veicolo</button>
                                 </form>
                             </div>
                         )}
 
                         {view === 'admin' && isAdmin && (
-                            <div className="p-6 animate-in space-y-8 pb-40 text-left text-slate-100">
+                            <div className="p-6 animate-in space-y-8 pb-40 text-left text-slate-100 text-left">
                                 <h2 className="text-3xl font-black italic uppercase text-white text-left">Admin Panel</h2>
                                 <div className={`p-7 rounded-[2.5rem] shadow-xl border space-y-4 transition-colors ${editingUser ? 'bg-blue-900 border-blue-700' : 'bg-slate-900 border-slate-800'}`}>
                                     <h3 className="font-black uppercase text-xs text-orange-500 ml-2 text-left">{editingUser ? "Modifica Cliente" : "Crea Accesso Cliente"}</h3>
@@ -465,13 +461,13 @@
                                         setNewUser({email:'', password:'', role:'user'}); showToast("Salvato ✓");
                                     }} className="w-full bg-blue-600 p-5 rounded-2xl font-black uppercase italic shadow-lg text-white text-center text-white">Salva Credenziali</button>
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-3 text-left">
                                     {allUsers.map(u => (
                                         <div key={u.id} className="p-4 bg-white rounded-3xl flex justify-between items-center shadow-lg text-slate-900">
                                             <div className="flex-1 overflow-hidden text-left"><p className="font-black text-sm text-slate-900 truncate text-left">{u.email}</p><span className="text-[8px] font-black uppercase bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200 text-left">{u.role}</span></div>
                                             <div className="flex gap-2 text-center text-center">
                                                 <button onClick={() => { setEditingUser(u); setNewUser({email:u.email, password:u.password, role:u.role||'user'}); }} className="p-3 bg-blue-50 text-blue-600 rounded-xl active:scale-90 text-center"><Icon name="edit"/></button>
-                                                <button onClick={async () => { if(confirm("Eliminare?")) await db.doc(`artifacts/garage_snoopy_final/public/data/users/${u.id}`).delete(); }} className="p-3 bg-red-50 text-red-500 rounded-xl active:scale-90 text-center"><Icon name="trash-alt"/></button>
+                                                <button onClick={async () => { if(confirm("Eliminare definitivamente?")) await db.doc(`artifacts/garage_snoopy_final/public/data/users/${u.id}`).delete(); }} className="p-3 bg-red-50 text-red-500 rounded-xl active:scale-90 text-center"><Icon name="trash-alt"/></button>
                                             </div>
                                         </div>
                                     ))}
@@ -481,26 +477,26 @@
                     </main>
 
                     {session && (
-                        <nav className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center max-w-[480px] mx-auto rounded-t-[3rem] shadow-2xl z-40 text-center">
-                            <button onClick={() => { setSelectedBikeId(null); setView('garage'); }} className={`flex flex-col items-center gap-1 ${view === 'garage' ? 'text-orange-500' : 'text-slate-500'}`}><Icon name="motorcycle" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter">Garage</span></button>
+                        <nav className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex justify-around items-center max-w-[480px] mx-auto rounded-t-[3rem] shadow-2xl z-40 text-center text-slate-100">
+                            <button onClick={() => { setSelectedBikeId(null); setView('garage'); }} className={`flex flex-col items-center gap-1 ${view === 'garage' ? 'text-orange-500' : 'text-slate-500'}`}><Icon name="motorcycle" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter text-center">Garage</span></button>
                             <button onClick={() => setView('history')} className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-orange-500' : 'text-slate-500'}`}><Icon name="history" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter text-center">Registro</span></button>
                             <div className="relative -top-12 text-center">
                                 <button onClick={() => { if(selectedBikeId) setView('addLog'); else showToast("Scegli un veicolo!"); }} className={`p-5 rounded-full shadow-2xl border-4 border-slate-900 active:scale-90 transition-all ${selectedBikeId ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-500'}`}><Icon name="plus" size="lg"/></button>
                             </div>
-                            <button onClick={() => { if(selectedBikeId) setView('dashboard'); else showToast("Scegli un veicolo!"); }} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-orange-500' : 'text-slate-500'} ${!selectedBikeId ? 'opacity-30' : ''}`}><Icon name="tachometer-alt" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter text-center">Stato</span></button>
-                            <button onClick={() => setView('admin')} className={`flex flex-col items-center gap-1 ${view === 'admin' ? 'text-orange-500' : 'text-slate-500'}`}><Icon name="user-shield" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter text-center">Admin</span></button>
+                            <button onClick={() => { if(selectedBikeId) setView('dashboard'); else showToast("Scegli un veicolo!"); }} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-orange-500' : 'text-slate-500'} ${!selectedBikeId ? 'opacity-30' : ''}`}><Icon name="tachometer-alt" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter text-center text-center">Stato</span></button>
+                            <button onClick={() => setView('admin')} className={`flex flex-col items-center gap-1 ${view === 'admin' ? 'text-orange-500' : 'text-slate-500'}`}><Icon name="user-shield" size="lg"/><span className="text-[9px] font-black uppercase tracking-tighter text-center text-center">Admin</span></button>
                         </nav>
                     )}
 
                     {confirmDelete && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-overlay animate-in">
-                            <div className="bg-slate-800 w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center border border-slate-700">
-                                <div className="mx-auto w-fit p-4 bg-red-500/10 text-red-500 rounded-full text-center text-center"><Icon name="exclamation-triangle" size="2x"/></div>
+                            <div className="bg-slate-800 w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center border border-slate-700 text-left">
+                                <div className="mx-auto w-fit p-4 bg-red-500/10 text-red-500 rounded-full text-center text-center text-center"><Icon name="exclamation-triangle" size="2x"/></div>
                                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-white text-center">Elimina Veicolo?</h3>
                                 <p className="text-sm text-slate-400 font-medium text-center">Rimuovere definitivamente <strong>{confirmDelete.model}</strong>?</p>
-                                <div className="flex flex-col gap-2 pt-2 text-center text-white">
+                                <div className="flex flex-col gap-2 pt-2 text-center text-white text-center">
                                     <button onClick={() => handleDeleteBike(confirmDelete.id)} className="w-full bg-red-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 italic text-white text-center">Sì, Elimina Ora</button>
-                                    <button onClick={() => setConfirmDelete(null)} className="w-full bg-slate-700 text-slate-400 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 italic text-slate-400 text-center text-center">Annulla</button>
+                                    <button onClick={() => setConfirmDelete(null)} className="w-full bg-slate-700 text-slate-400 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 italic text-slate-400 text-center">Annulla</button>
                                 </div>
                             </div>
                         </div>
@@ -508,7 +504,7 @@
 
                     {status && (
                         <div className="toast-container animate-in text-center text-white">
-                            <div className="bg-slate-900 border border-slate-700 p-4 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/50 text-center">
+                            <div className="bg-slate-900 border border-slate-700 p-4 rounded-2xl flex items-center gap-3 shadow-2xl shadow-black/50 text-center text-left">
                                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse text-center"/>
                                 <p className="text-xs font-black uppercase tracking-widest text-white text-center text-center">{status}</p>
                             </div>
